@@ -34,6 +34,7 @@ function [x, y, flags, stats] = cpcg(A, B, C, b, opts)
   % Regularized Saddle-Point Systems, SIAM Journal on Matrix Analysis
   % and Applications, 28(1), pp. 170-189, 2006.
   %
+  % Daniela, Sept 7, 2017: fixed error in computation of residual norm
 
   % Set problem sizes and optional arguments.
   n = size(A,1);
@@ -69,7 +70,8 @@ function [x, y, flags, stats] = cpcg(A, B, C, b, opts)
   ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
   p = -r;
   q = -u;
-  residNorm = g' * r;
+  residNorm2 = g' * r;
+  residNorm = sqrt(residNorm2);
   stopTol = atol + rtol * residNorm;
   residHistory = [residNorm];
 
@@ -89,7 +91,7 @@ function [x, y, flags, stats] = cpcg(A, B, C, b, opts)
     Ap = A * p; pAp = p' * Ap;
     Cq = C * q; qCq = q' * Cq;
 
-    alpha = residNorm / (pAp + qCq);
+    alpha = residNorm2 / (pAp + qCq);
 
     if display_info
       fprintf('%8.1e  %8.1e  %8.1e\n', pAp, qCq, alpha);
@@ -103,13 +105,14 @@ function [x, y, flags, stats] = cpcg(A, B, C, b, opts)
     ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
 
     t = a + u;
-    residNorm_new = g' * r + t' * w;
-    beta = residNorm_new / residNorm;
+    residNorm2_new = g' * r + t' * w;
+    beta = residNorm2_new / residNorm2;
 
     p = -r + beta * p;
     q = -t + beta * q;
 
-    residNorm = residNorm_new;
+    residNorm2 = residNorm2_new;
+    residNorm = sqrt(residNorm2);
     residHistory = [residHistory; residNorm];
     if display_info, fprintf('%4d  %8.1e  ', itn, residNorm); end
   end
