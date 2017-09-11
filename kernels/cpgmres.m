@@ -1,211 +1,262 @@
-function [x, y, flags, stats] = reg_gmres3(A, B, C, b, opts)
+function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
+
+%======================================================================
+% [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
 %
-% [x, y, flags, stats] = reg_gmres3(A, B, C, b, opts)
+% Constraint-preconditioned GMRES(r) for generalized saddle-point
+% systems.
 %
-% =========================================================================
-% DOC TO BE MODIFIED, JUST REMBER THAT
-% the system matrix and the preconditioner are regularized saddle-point
-% ones.
+%======================================================================
+% Last update, September 9, 2017.
+% Daniela di Serafino, daniela.diserafino@unicampania.it.
+% Dominique Orban, dominique.orban@gerad.ca.
 %
-%    System                                Preconditioner
+%======================================================================
+% This function solves the regularized saddle-point system
 %
-%    [ A  B' ] [ x ] = [ b1 ]             [ G  B' ] 
-%    [ B  -C ] [ y ]   [ b2 ]             [ B  -C ]
+%  [ A   B' ] [x] = [b]
+%  [ B  -C  ] [y]   [0],
 %
-% NOTE: we use q instead of y; note that q=0 at each restart, while
-% y=y+update (see the notations of picture 1).
+% where A is n x n, B is m x n, and C is symmetric of size m x m, with
+% m <= n. A need not be symmetric. The saddle-point matrix is assumed
+% to be nonsingular.
 %
-% =========================================================================
-% Apply preconditioned GMRES to the n-by-n system Ax=b. The preconditioner
-% is assumed to be symmetric and positive definite, i.e., this method is
-% equivalent to applying the standard GMRES to the centrally-preconditioned
-% system
-%          L'AL y = L'b
-% where LL' = inv(M) and Ly=x.
+% The method uses a constraint preconditioner of the form
 %
-% opts.M is a linear operator representing the inverse of the preconditioner.
-% More precisely, the product M*v should return the solution of the system
-% Ky=v where K is the preconditioner. By default, opts.M is the identity.
+%  [ G   B' ]
+%  [ B  -C  ],
 %
-% Other optional arguments are as follows:
-%   opts.atol  : absolute stopping tolerance (default: 1.0e-8)
-%   opts.rtol  : relative stopping tolerance (default: 1.0e-6)
-%   opts.itmax : maximum number of iterations (default: 2n)
-%   opts.reorth: perform partial reorthogonalization (default: false)
-%   opts.x     : initial guess as a *column* vector
-%   opts.print : display info at each iteration (default: True)
+% where G is a symmetric approximation to A, and must satisfy the
+% following condition:
 %
-% Returns:
-%   flags.solved: true if successful, false if itmax was attained
-%   flags.niter : number of iterations performed.
+% let C = EDE' be a decomposition of C with D nonsingular;
+% the block diagonal matrix blkdiag(G, inv(D)) is positive definite
+% on the nullspace of [B E].
 %
-% daniela.diserafino@unicampania.it, dominique.orban@gerad.ca, 2017.
+% The iterations stop when
+%
+%   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (k = itmax),
+%
+% where residNorm and residNorm0 are the 2-norms of the current and
+% initial residuals, atol and rtol are absolute and relative tolerances,
+% k is the iteration index, and itmax is the maximum number of iterations.
+%
+% NOTE that
+% - the argument A may be a matrix or a linear operator, but C and G
+%   must be explicit matrices;
+% - B is not explicitly passed to cpgmres as an argument, but it
+%   has been used to form the constraint preconditioner stored
+%   in M (see reg_cpkrylov.m);
+% - M must be an operator such that M*z returns the solution of
+%
+%  [ G   B' ] [r] = [z1]
+%  [ B  -C  ] [u]   [z2].
+%
+% The linear operatos are defined using the Spot Toolbox by Ewout van
+% den Berg and Michael P. Friedlander.
+% See http://www.cs.ubc.ca/labs/scl/spot.
+% 
+%======================================================================
+% REFERENCE
+%   D. di Serafino and D. Orban,
+%   Regularized Constraint-Preconditioned Krylov Solvers for General
+%   Saddle-Point Systems.
+%   TBA
+%
+%======================================================================
+% INPUT ARGUMENTS
+% b:     n-vector, the vector b in the rhs of the saddle-point system;
+% A:     n x n matrix or linear operator, (1,1) block of the saddle-
+%        point matrix;
+% C:     m x m matrix (m <= n), -C is the (2,2) block of the saddle-point
+%        matrix;
+% M:     operator, the action of the constraint preconditioner on a
+%        vector;
+% opts:  [optional] struct variable with the following (possible)
+%        fields:
+%        atol    - absolute tolerance for GMRES stopping criterion
+%                  [default 1e-6],
+%        rtol    - relative tolerance for GMRES stopping criterion
+%                  [default 1e-6],
+%        restart - restart parameter r of GMRES(r) [default 30],
+%        reorth  - partial reorthogonalization, true/false [default false],
+%        itmax   - maximum number of GMRES iterations [default n+m],
+%        print   - display info about GMRES iterations [default true].
+%
+% OUTPUT ARGUMENTS
+% x:     n-vector, first n entries of the solution;
+% y:     m-vector, last m entries of the solution;
+% flag:  struct variable with the following fields:
+%        niters - number of GMRES iterations performed,
+%        solved - true if residNorm <= stopTol, false otherwise (itmax
+%                 attained);
+% stats: struct variable with the following fields:
+%        residHistory - history of 2-norm of residuals.
+%
+%======================================================================
 
-% Set problem sizes and optional arguments.
-n = size(A,1);
-m = size(C,1);
-atol = 1.0e-8;
-rtol = 1.0e-6;
-% reorth = false;           % never used ???
-restart = 20;
-itmax = 10*ceil(n/restart); % With no restart (and exact arithmetic) it
-                            % should be itmax = ceil( ((n+rank(C)-m)/restart );
-                            % since rank(C) <= m, we might use 
-                            % itmax = ceil(n/restart), but it could
-                            % be too small when restart is used.                       
-display_info = true;
-M = opEye(n+m);
-if nargin > 4
-  if isfield(opts, 'atol')
-    atol = opts.atol;
-  end
-  if isfield(opts, 'rtol')
-    rtol = opts.rtol;
-  end
-  if isfield(opts, 'itmax')
-    itmax = opts.itmax;
-  end
-  if isfield(opts, 'M')
-    M = opts.M;
-  end
-%   if isfield(opts, 'reorth')
-%     reorth = opts.reorth;
-%   end
-  if isfield(opts, 'restart')
-    restart = opts.restart;
-  end
-  if isfield(opts, 'print')
-    display_info = opts.print;
-  end
-end
+    % Set problem sizes and optional arguments.
+    n = size(A,1);
+    m = size(C,1);
+    atol = 1.0e-8;
+    rtol = 1.0e-6;
+    restart = 30;
+    % reorth = false;           % ????
+    itmax = n+m;                % which value?????
+    display_info = true;
 
-% Set up workspace.
-g = zeros(restart+1, 1);
-V = zeros(n, restart+1);        % Preconditioned Krylov vectors [v1 v2 ... vk].
-Q = zeros(m, restart+1);        % Preconditioned Krylov vectors [q1 q2 ... qk].
-H = zeros(restart+1, restart);  % Upper Hessenberg form of the saddle-point matrix.
-c = zeros(restart, 1);          % Givens cosines.
-s = zeros(restart, 1);          % Givens sines.
-
-% Misc. initializations.
-finished = false;
-outer = 0;
-if display_info
-  header_fmt = '%6s  %7s\n';
-%   info_fmt = '%5d%1s  %7.1e\n';
-  info_fmt = '%5d%1s  %14.8e\n';
-end
-
-% Set up zero vectors
-zeron = zeros(n,1);
-zerom = zeros(m,1);
-
-% Set initial guess 
-if isfield(opts, 'x')
-   x = opts.x;
-else
-   x = zeron;
-end
-if isfield(opts, 'y')
-   y = opts.y;
-else
-   y = zerom;
-   t = zerom;            % if y = -q0 = 0, then t = 0;
-end
-
-% Outer loop.
-while ~finished && outer < itmax
-  outer = outer + 1;
-
-  % Initial Krylov vector.
-  u = b(1:n,1);             % Only the first n entries of b are required
-  % To be removed -- deal with nonzero starting guess in the the driver
-  % reg_cpkrylov
-  if ( (isfield(opts, 'x') || isfield(opts, 'y')) && outer == 1 ) || ( outer > 1 )
-    u = u - A*x - B'*y;
-    t =   - B*x + C*y;
-  end
-
-  w = M * [u; -t];
-  V(:,1) = w(1:n,1);
-  % Q(:,1) = q - w(n+1:n+m,1);      %WRONG: qk = - (yk - y0)
-  Q(:,1) = - w(n+1:n+m,1);
-  residNorm = sqrt(dot(u, V(:,1)) + dot(t, Q(:,1)));
-  if residNorm ~= 0
-    V(:,1) = V(:,1) / residNorm;
-    Q(:,1) = Q(:,1) / residNorm;
-  end
-  if outer == 1
-    stopTol = atol + rtol * residNorm;
-    residHistory = [residNorm];
-  end
-
-  k = 0;
-  g(1) = residNorm;
-
-  if display_info
-    if outer == 1
-      fprintf(header_fmt, 'iter', '|resid|');
-    end
-    fprintf(info_fmt, k, '', residNorm);
-  end
-
-  % Inner loop.
-  while residNorm > stopTol && k < restart
-    k = k + 1;
-
-    % Compute next Krylov vectors from the modified Gram-Schmidt process.
-    u = A * V(:,k);
-    t = C * Q(:,k);
-    w = M * [u; -t];
-    V(:,k+1) = w(1:n,1);
-    Q(:,k+1) = Q(:,k) - w(n+1:n+m,1);  
-    for j = 1 : k
-      H(j,k) = dot(V(:,j), u) + dot(Q(:,j), t);
-      V(:,k+1) = V(:,k+1) - H(j,k) * V(:,j);
-      Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
-    end
-    H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
-
-    status = '';
-    if H(k+1,k) ~= 0   % Lucky breakdown if = 0.
-      V(:,k+1) = V(:,k+1) / H(k+1,k);
-      Q(:,k+1) = Q(:,k+1) / H(k+1,k);
+    if nargin > 4
+        if isfield(opts, 'atol')
+            atol = opts.atol;
+        end
+        if isfield(opts, 'rtol')
+            rtol = opts.rtol;
+        end
+        if isfield(opts, 'itmax')
+            itmax = opts.itmax;
+        end
+        %   if isfield(opts, 'reorth')
+        %     reorth = opts.reorth;
+        %   end
+        if isfield(opts, 'restart')
+            restart = opts.restart;
+        end
+        if isfield(opts, 'print')
+            display_info = opts.print;
+        end
     end
 
-    % Apply previous (symmetric) Givens rotations.
-    for j = 1 : k-1
-      Hjk = c(j) * H(j,k) + s(j) * H(j+1,k);
-      H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
-      H(j,k) = Hjk;
-    end
+    % Set up workspace.
+    g = zeros(restart+1, 1);
+    V = zeros(n, restart+1);        % Preconditioned Krylov vectors [v1 v2 ... vk].
+    Q = zeros(m, restart+1);        % Preconditioned Krylov vectors [q1 q2 ... qk].
+    H = zeros(restart+1, restart);  % Upper Hessenberg form of the saddle-point matrix.
+    c = zeros(restart, 1);          % Givens cosines.
+    s = zeros(restart, 1);          % Givens sines.
 
-    % Compute and apply current (symmetric) Givens rotation.
-    % [ck  sk] [H(k,k)  ] = [*]
-    % [sk -ck] [H(k+1,k)]   [0]
-    [c(k), s(k), H(k,k)] = SymGivens(H(k,k), H(k+1,k));
-    H(k+1,k) = 0;
-    g(k+1) = s(k) * g(k);
-    g(k)   = c(k) * g(k);
-    residNorm = abs(g(k+1));
-    residHistory = [residHistory; residNorm];
+    % Set up zero vectors
+    zeron = zeros(n,1);
+    zerom = zeros(m,1);
 
+    % Set starting guess
+    x = zeron;
+    y = zerom;
+
+    % Misc. initializations.
+    finished = false;
+    outer = 0;
+    outermax = ceil(itmax/restart);
     if display_info
-      % Display current info.
-      fprintf(info_fmt, (outer - 1) * restart + k, status, residNorm);
+        fprintf('\n**** Constraint-preconditioned version of GMRES(%d) ****\n\n', restart);
+        header_fmt = '%5s  %9s\n';
+        %info_fmt = '%5d  %9.2e\n';
+        info_fmt = '%5d  %14.7e\n';
     end
-  end
+    
+    % Outer loop.
+    while ~finished && outer < outermax
 
-  % Update x and y with solution of upper triangular system.
-  z = H(1:k,1:k) \ g(1:k);
-  x = x + V(:,1:k) * z;
-  y = y - Q(:,1:k) * z;     % y = y0 - q
+        outer = outer + 1;
 
-  finished = residNorm <= stopTol;
+        % Set initial Krylov vector and residual norm.
+        % Separating the case outer = 1 saves some computation. Is it
+        % worthwhile?
+        q = zerom;
+        if outer == 1
+            u = b;                % u_0 = b - A*x_0 = b
+            t = zerom;            % t_0 = C*y_0 = C*q0 = 0, y0 = q0 = 0
+            w = M * [u; -t];
+            V(:,1) = w(1:n,1);
+            Q(:,1) = - w(n+1:n+m,1);
+        else
+            u = b - A*x;
+            t = C*y;
+            w = M * [u; -t];
+            V(:,1) = w(1:n,1);
+            Q(:,1) = y - w(n+1:n+m,1);
+        end
+        residNorm = sqrt(dot(u, V(:,1)) + dot(t, Q(:,1)));
+        if residNorm ~= 0
+            V(:,1) = V(:,1) / residNorm;
+            Q(:,1) = Q(:,1) / residNorm;
+        end
+        if outer == 1
+            stopTol = atol + rtol * residNorm;
+            residHistory = [residNorm];
+        end
+
+        k = 0;             % inner iteration index
+        g(1) = residNorm;
+
+        % Print initial iteration and residual norm (if required).
+        if display_info
+            if outer == 1
+                fprintf(header_fmt, 'iter', '|resid|');
+            end
+            fprintf(info_fmt, k, residNorm);
+        end
+
+        % Inner loop.
+        while residNorm > stopTol && k < restart
+
+            k = k + 1;
+
+            % Compute next Krylov vectors from modified Gram-Schmidt
+            % process.
+            u = A * V(:,k);
+            t = C * Q(:,k);
+            w = M * [u; -t];
+            V(:,k+1) = w(1:n,1);
+            Q(:,k+1) = Q(:,k) - w(n+1:n+m,1);
+            for j = 1 : k
+                H(j,k) = dot(V(:,j), u) + dot(Q(:,j), t);
+                V(:,k+1) = V(:,k+1) - H(j,k) * V(:,j);
+                Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
+            end
+            H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
+
+            if H(k+1,k) ~= 0          % Lucky breakdown if = 0.
+                V(:,k+1) = V(:,k+1) / H(k+1,k);
+                Q(:,k+1) = Q(:,k+1) / H(k+1,k);
+            end
+
+            % Apply previous (symmetric) Givens rotations.
+            for j = 1 : k-1
+                Hjk = c(j) * H(j,k) + s(j) * H(j+1,k);
+                H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
+                H(j,k) = Hjk;
+            end
+
+            % Compute and apply current (symmetric) Givens rotation:
+            % [ck  sk] [H(k,k)  ] = [*]
+            % [sk -ck] [H(k+1,k)]   [0]
+            [c(k), s(k), H(k,k)] = SymGivens(H(k,k), H(k+1,k));
+            H(k+1,k) = 0;
+            g(k+1) = s(k) * g(k);
+            g(k)   = c(k) * g(k);
+            residNorm = abs(g(k+1));
+            residHistory = [residHistory; residNorm];
+
+            % Print current iteration and residual norm (if required).
+            if display_info
+                fprintf(info_fmt, (outer - 1) * restart + k, residNorm);
+            end
+        end
+
+        % Update x and y with solution of upper triangular system.
+        z = H(1:k,1:k) \ g(1:k);
+        x = x + V(:,1:k) * z;
+        q = q + Q(:,1:k) * z;
+        y = y - q;
+
+        finished = residNorm <= stopTol;
+        
+    end
+
+    stats.residHistory = residHistory;
+
+    % Wrap up.
+    flags.niters = (outer - 1) * restart + k;
+    flags.solved = (residNorm <= stopTol);
+
 end
-
-stats.residHistory = residHistory;
-
-% Wrap up.
-flags.niters = (outer - 1) * restart + k;
-flags.solved = (residNorm <= stopTol);

@@ -1,170 +1,235 @@
-function [x, y, flags, stats] = reg_cglanczos3(A, B, C, b, opts)
-%
-% [x, y, flags, stats] = reg_cglanczos3(A, B, C, b, opts)
-%
-% =========================================================================
-% DOC TO BE WRITTEN, JUST REMBER THAT
-% the system matrix and the preconditioner are regularized saddle-point
-% ones.
-%
-%    System                                Preconditioner
-%
-%    [ A  B' ] [ x ] = [ b1 ]             [ G  B' ] 
-%    [ B  -C ] [ y ]   [ b2 ]             [ B  -C ]
-%
-%
-% INSERT SHORT DESCRIPTION of the solution of the tridiagonal system
-% arising from Lanczos process (so that the meaning of the variables
-% used next can be recognized)
-%
-% NOTES:
-% - do not keep both q and y=-q, but use only y;
-% - B not explicitly used if starting guess = 0.
-%
-% =========================================================================
-%
-% daniela.diserafino@unicampania.it, dominique.orban@gerad.ca, 2017.
+function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
 
-% Set problem sizes and optional arguments.
-n = size(A,1);
-m = size(C,1);
-atol = 1.0e-8;
-rtol = 1.0e-6;
-itmax = 2*n;                  % To be modified?                   
-display_info = true;
-M = opEye(n+m);
-if nargin > 4
-    if isfield(opts, 'atol')
-        atol = opts.atol;
-    end
-    if isfield(opts, 'rtol')
-        rtol = opts.rtol;
-    end
-    if isfield(opts, 'itmax')
-        itmax = opts.itmax;
-    end
-    if isfield(opts, 'M')
-        M = opts.M;
-    end
-    if isfield(opts, 'print')
-        display_info = opts.print;
-    end
-end
+%======================================================================
+% [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
+%
+% Constraint-preconditioned Lanczos version of CG (CG-Lanczos) for
+% generalized saddle-point systems.
+%
+%======================================================================
+% Last update, September 9, 2017.
+% Daniela di Serafino, daniela.diserafino@unicampania.it.
+% Dominique Orban, dominique.orban@gerad.ca.
+%
+%======================================================================
+% This function solves the regularized saddle-point system
+%
+%  [ A   B' ] [x] = [b]
+%  [ B  -C  ] [y]   [0],
+%
+% where A is n x n, B is m x n, C is m x m, with m <= n, and A and C
+% are symmetric. The system must also satisfy the following condition:
+%
+% let C = EDE' be a decomposition of C with D nonsingular;
+% the block-diagonal matrix blkdiag(A, inv(D)) must be positive
+% definite on the nullspace of [B E].
+%
+% The method uses a constraint preconditioner of the form
+%
+%  [ G   B' ]
+%  [ B  -C  ],
+%
+% where G is a symmetric approximation to A, and must be chosen so that
+% blkdiag(G, inv(D)) is positive definite on the nullspace of [B E].
+%
+% The iterations stop when
+%
+%   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (k = itmax),
+% 
+% where residNorm and residNorm0 are the 2-norms of the current and
+% initial residuals, atol and rtol are absolute and relative tolerances,
+% k is the iteration index, and itmax is the maximum number of iterations.
+%
+% NOTE that
+% - the argument A may be a matrix or a linear operator, but C and G
+%   must be explicit matrices;
+% - B is not explicitly passed to cpcglanczos as an argument, but it
+%   has been used to form the constraint preconditioner stored
+%   in M (see reg_cpkrylov.m);
+% - M must be an operator such that M*z returns the solution of
+%
+%  [ G   B' ] [r] = [z1]
+%  [ B  -C  ] [u]   [z2].
+%
+% The linear operatos are defined using the Spot Toolbox by Ewout van
+% den Berg and Michael P. Friedlander.
+% See http://www.cs.ubc.ca/labs/scl/spot.
+% 
+%======================================================================
+% REFERENCE
+%   D. di Serafino and D. Orban,
+%   Regularized Constraint-Preconditioned Krylov Solvers for General
+%   Saddle-Point Systems.
+%   TBA
+%
+%======================================================================
+% INPUT ARGUMENTS
+% b:     n-vector, the vector b in the rhs of the saddle-point system;
+% A:     n x n matrix or linear operator, (1,1) block of the saddle- 
+%        point matrix;
+% C:     m x m matrix (m <= n), -C is the (2,2) block of the saddle-point
+%        matrix;
+% M:     operator, the action of the constraint preconditioner on a
+%        vector;
+% opts:  [optional] struct variable with the following (possible)
+%        fields:
+%        atol  - absolute tolerance for CG-Lanczos stopping criterion
+%                [default 1e-6],
+%        rtol  - relative tolerance for CG-Lanczos stopping criterion
+%                [default 1e-6],
+%        itmax - maximum number of CG-Lanczos iterations [default n],
+%        print - display info about CG-Lanczos iterations [default true].
+%
+% OUTPUT ARGUMENTS
+% x:     n-vector, first n entries of the solution;
+% y:     m-vector, last m entries of the solution;
+% flag:  struct variable with the following fields:
+%        niters - number of CG-Lanczos iterations performed,
+%        solved - true if residNorm <= stopTol, false otherwise (itmax
+%                 attained);
+% stats: struct variable with the following fields:
+%        residHistory - history of 2-norm of residuals.
+%
+%======================================================================
 
-% Set up zero vectors.
-zeron = zeros(n,1);
-zerom = zeros(m,1);
+    % Set problem sizes and optional arguments.
+    n = size(A,1);
+    m = size(C,1);
+    atol = 1.0e-6;
+    rtol = 1.0e-6;
+    itmax = n;                
+    display_info = true;
 
-% Set initial guess, intial residual and (fake) Lanczos vector v0.
-% if isfield(opts, 'x')
-%     x = opts.x;
-% else
+    if nargin > 4
+        if isfield(opts, 'atol')
+            atol = opts.atol;
+        end
+        if isfield(opts, 'rtol')
+            rtol = opts.rtol;
+        end
+        if isfield(opts, 'itmax')
+            itmax = opts.itmax;
+        end
+        if isfield(opts, 'print')
+            display_info = opts.print;
+        end
+    end
+
+    % Set up zero vectors.
+    zeron = zeros(n,1);
+    zerom = zeros(m,1);
+
+    % Initialize some vectors, including (fake) Lanczos vectors.
+    % v0 and q0.
     x = zeron;
-% end
-% if isfield(opts, 'y')
-%     y = opts.y;
-% else
-    y = zerom;
-% end
-u = b(1:n,1);             % Only the first n entries of b are required.
-%q = zerom;                % q_k = - (y_k - y_0)
-t = zerom;                % t_k = C * q_k = 0 for k = 0        
-% if ( isfield(opts, 'x') || isfield(opts, 'y') )
-%     u = u - A*x + B'*q;
-%     t =   - B*x + C *y;
-% end
-vk = zeron;
-qk = zerom;
-
-% Set Lanczos vectors v1 and q1, and initial residual norm
-vprec = M * [u; t];                % t = -t = 0 at iter 0
-vkp1  = vprec(1:n);
-qkp1  = qk - vprec(n+1:n+m);       % qk=0, can be deleted from this formula
-beta  = dot(u, vkp1);              % beta  = dot(u, vkp1) + dot(t, qkp1), but t = 0
-if beta < 0
-    error('Preconditioner is not positive definite.');
-end
-if beta ~= 0
-    % Normalize Lanczos vectors v1 and q1
-    beta = sqrt(beta);
-    vkp1 = vkp1/beta;
-    qkp1 = qkp1/beta;
-end
-wv = vkp1;
-wq = qkp1;
-residNorm = beta;
-residHistory = [residNorm];
+    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk  
+    u = b;                    % u0 = b - A*x0 = b
+    t = zerom;                % t0 = C * q0 = 0   
+    vk = zeron;
+    qk = zerom;
     
-% Misc. initializations
-k    = 0;
-dg   = 0;      % d_0
-zeta = 1;      % zeta_0
-low  = 1;      % l_1
-eta  = beta;   % eta_1
+    if display_info
+        fprintf('\n**** Constraint-preconditioned version of CG-Lanczos ****\n\n');
+    end
 
-% Set tolerance
-stopTol = atol + rtol * residNorm;
-
-% Print initial residual norm (if required)
-if display_info
-    header_fmt = '%6s  %7s\n';
-    info_fmt = '%5d%1s  %7.1e\n';
-    fprintf(header_fmt, 'iter', '|resid|');
-    fprintf(info_fmt, k, '', residNorm);
-end
-
-% Main loop.
-while residNorm > stopTol && k < itmax
-    k = k + 1;
-    
-    % Shift position of Lanczos vectors
-    vkm1 = vk;
-    qkm1 = qk;
-    vk = vkp1;
-    qk = qkp1;
-    
-    % Update x and y
-    u = A * vk;
-    t = C * qk;
-    alpha = dot(u, vk) + dot(t, qk);     % STOP if alpha <= 0?
-    dg = alpha - low*low * dg;           % d_k
-    zeta = eta/dg;                       % zeta_k
-    x = x + zeta * wv;
-%     q = q + zeta * wq;
-    y = y - zeta * wq;
-    
-    % Compute next Lanczos vectors and upddate residual norm
-    vprec = M * [u; -t];
-    vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
-    qkp1 = qk - vprec(n+1:n+m);
-    qkp1 = qkp1 - alpha*qk - beta*qkm1;
-    beta = dot(u, vkp1) + dot(t, qkp1);
+    % Set Lanczos vectors v1 and q1, and initial residual norm.
+    vprec = M * [u; t];       % M * [u ; -t0], t0 = 0
+    vkp1  = vprec(1:n);
+    qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
+    beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
-        error('Preconditioner is not positive definite.');
+        errmsg = ['Iter 0: preconditioner appears not positive definite.']
+        error(errmsg);
     end
     if beta ~= 0
+        % Normalize Lanczos vectors v1 and q1.
         beta = sqrt(beta);
         vkp1 = vkp1/beta;
         qkp1 = qkp1/beta;
     end
+    wv = vkp1;
+    wq = qkp1;
+    residNorm = beta;
+    residHistory = [residNorm];
 
-    low = beta / dg;                      % l_k+1
-    eta = -low * eta;                     % eta_k+1
-    wv = vkp1 - low*wv;                   % wv_k+1
-    wq = qkp1 - low*wq;                   % wq_k+1
-    
-    residNorm = beta * abs(zeta);
-    residHistory = [residHistory; residNorm];
+    % Misc. initializations.
+    k    = 0;                 % iteration index
+    dg   = 0;                 % d0
+    zeta = 1;                 % zeta0
+    low  = 1;                 % l1
+    eta  = beta;              % eta1
+
+    % Set tolerance.
+    stopTol = atol + rtol * residNorm;
+
+    % Print initial iteration and residual norm (if required).
+    if display_info
+        header_fmt = '%5s  %9s\n';
+        info_fmt = '%5d  %9.2e\n';
+        fprintf(header_fmt, 'iter', '|resid|');
+        fprintf(info_fmt, k, residNorm);
+    end
+
+    % Main loop.
+    while residNorm > stopTol && k < itmax
+        
+        k = k + 1;
+
+        % Shift position of Lanczos vectors.
+        vkm1 = vk;
+        qkm1 = qk;
+        vk = vkp1;
+        qk = qkp1;
+
+        % Update x and y.
+        u = A * vk;
+        t = C * qk;
+        alpha = dot(u, vk) + dot(t, qk);  % STOP if alpha <= 0 ?
+        dg = alpha - low*low * dg;        % dk
+        zeta = eta/dg;                    % zetak
+        x = x + zeta * wv;
+        y = y - zeta * wq;                % qk = qk-1 + zetak*wqk, yk = y0-qk = -qk
+
+        % Compute next Lanczos vectors and upddate residual norm.
+        vprec = M * [u; -t];
+        vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
+        qkp1 = qk - vprec(n+1:n+m);
+        qkp1 = qkp1 - alpha*qk - beta*qkm1;
+        beta = dot(u, vkp1) + dot(t, qkp1);
+        if beta < 0
+            itstr = num2str(k);
+            errmsg = ['Iter ' itstr ': preconditioner appears not positive definite.']
+            error(errmsg);
+        end
+        if beta ~= 0
+            beta = sqrt(beta);
+            vkp1 = vkp1/beta;
+            qkp1 = qkp1/beta;
+        end
+
+        low = beta / dg;                     % lk+1
+        eta = -low * eta;                    % etak+1
+        wv = vkp1 - low*wv;                  % wvk+1
+        wq = qkp1 - low*wq;                  % wqk+1
+
+        residNorm = beta * abs(zeta);
+        residHistory = [residHistory; residNorm];
+        
+        % Print current iteration and residual norm (if required).
+        if display_info
+            fprintf(info_fmt, k, residNorm);
+        end
+        
+    end
+
+    if display_info
+        fprintf('\n');
+    end
+
+    stats.residHistory = residHistory;
+
+    % Wrap up.
+    flags.niters = k;
+    flags.solved = (residNorm <= stopTol);
+
 end
-
-%y = -q;
-
-if display_info
-    fprintf('\n');
-end
-
-stats.residHistory = residHistory;
-
-% Wrap up
-flags.niters = k;
-flags.solved = (residNorm <= stopTol);
