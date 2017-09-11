@@ -138,7 +138,7 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
     qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
-        errmsg = ['Iter 0: preconditioner appears not positive definite.']
+        errmsg = 'Iter 0: preconditioner appears not positive definite.';
         error(errmsg);
     end
     if beta ~= 0
@@ -198,7 +198,7 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
         beta = dot(u, vkp1) + dot(t, qkp1);
         if beta < 0
             itstr = num2str(k);
-            errmsg = ['Iter ' itstr ': preconditioner appears not positive definite.']
+            errmsg = ['Iter ' itstr ': preconditioner appears not positive definite.'];
             error(errmsg);
         end
         if beta ~= 0
