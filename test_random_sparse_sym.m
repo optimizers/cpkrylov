@@ -15,7 +15,9 @@ Q = sprandsym(n,density,rc,1);
 % Q = Q + Q' + 1e5*speye(n);
 A = sprand(m,n,density,rc);
 % A = 1e8*A;
-C = spdiags(diag(sprandsym(m,0,rc,1)),0,m,m);
+% C = spdiags(diag(sprandsym(m,0,rc,1)),0,m,m);           % C diag spd
+density2 = 0.8;
+C = spdiags(abs(diag(sprand(m,m,density2,rc))),0,m,m);  % C diag with entries >= 0
 % C = 1e-2*C;
 K = [Q  A' ; A  -C];
 b = rand(n+m, 1);
