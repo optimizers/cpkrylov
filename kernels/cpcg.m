@@ -127,10 +127,6 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
     ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
     p = -r;
     q = -u;
-
-    %%%%%%%%%%%%%%%%%%%
-    %s = -u;
-    %%%%%%%%%%%%%%%%%%%
     
     residNorm2 = g' * r;
     residNorm = sqrt(residNorm2);
