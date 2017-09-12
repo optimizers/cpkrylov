@@ -7,14 +7,15 @@
 % clear;
 % close all;
 
-n = 200; m = 100;
+n = 300; m = 100;
 density = 0.01;
-Q = sprandsym(n,density,1e-6,1);
-% Q = sprand(n,n,density,1e-1);
+rc = 1e-7;
+Q = sprandsym(n,density,rc,1);
+% Q = sprand(n,n,density,rc);
 % Q = Q + Q' + 1e5*speye(n);
-A = sprand(m,n,density);
+A = sprand(m,n,density,rc);
 % A = 1e8*A;
-C = spdiags(abs(diag(rand(m))),0,m,m);
+C = spdiags(diag(sprandsym(m,0,rc,1)),0,m,m);
 % C = 1e-2*C;
 K = [Q  A' ; A  -C];
 b = rand(n+m, 1);
@@ -40,7 +41,7 @@ n_lambdaPK_1 = length(find(abs(lambdaPK - 1) < 1e-8));
 fprintf('\nCONSTRAINT-PRECONDITIONED MATRIX\n');
 fprintf('\n  num. eigs close to 1: %d\n', n_lambdaPK_1);
 figure
-plot(1:n+m,lambdaPK,'*'); 
+semilogy(1:n+m,lambdaPK,'*'); 
 pause
 
 cpk1 = @cpcg;
@@ -52,11 +53,11 @@ cpk_string3 = 'CPDQGMRES';
 cpk4 = @cpgmres;
 cpk_string4 = 'CPGMRES';
 
-opts.print = true;     % true/false;
-opts.atol = 1.0e-5;
-opts.rtol = 1.0e-5;
-opts.itmax = 600;
-opts.mem = 3;          % 3 for symmetric systems;
+opts.print = true;        % true/false;
+opts.atol = 1.0e-6;
+opts.rtol = 1.0e-6;
+opts.itmax = 500;
+opts.mem = 3;             % 3 for symmetric systems;
 opts.restart = 30;
 
 % Iterative refinement 
@@ -69,7 +70,7 @@ opts.force_itref = true;  % force iterative refinement (true/false)
 
 % CPCG
 fprintf('\n\n******************* %s *******************\n\n', cpk_string1)
-[ cpk1x,  cpk1flags,  cpk1residHistory] =  reg_cpkrylov(cpk1, b, Q, A, C, G, opts);
+[cpk1x,  cpk1flags,  cpk1residHistory] =  reg_cpkrylov(cpk1, b, Q, A, C, G, opts);
 cpk1x1  = cpk1x(1:n);
 cpk1x2  = cpk1x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string1, norm(x-cpk1x)/norm(x));
@@ -80,7 +81,7 @@ pause
 
 % CPCGLANCZOS
 fprintf('\n\n******************* %s *******************\n\n', cpk_string2)
-[ cpk2x,  cpk2flags,  cpk2residHistory] =  reg_cpkrylov(cpk2, b, Q, A, C, G, opts);
+[cpk2x,  cpk2flags,  cpk2residHistory] =  reg_cpkrylov(cpk2, b, Q, A, C, G, opts);
 cpk2x1  = cpk2x(1:n);
 cpk2x2  = cpk2x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string2, norm(x-cpk2x)/norm(x));
@@ -91,7 +92,7 @@ pause
 
 % CPDQGMRES
 fprintf('\n\n******************* %s - mem %d *******************\n\n', cpk_string3, opts.mem)
-[ cpk3x,  cpk3flags,  cpk3residHistory] =  reg_cpkrylov(cpk3, b, Q, A, C, G, opts);
+[cpk3x,  cpk3flags,  cpk3residHistory] =  reg_cpkrylov(cpk3, b, Q, A, C, G, opts);
 cpk3x1  = cpk3x(1:n);
 cpk3x2  = cpk3x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string3, norm(x-cpk3x)/norm(x));
@@ -102,7 +103,7 @@ pause
 
 % restarted CPGMRES
 fprintf('\n\n******************* %s(%d)*******************\n\n', cpk_string4, opts.restart)
-[ cpk4x,  cpk4flags,  cpk4residHistory] =  reg_cpkrylov(cpk4, b, Q, A, C, G, opts);
+[cpk4x,  cpk4flags,  cpk4residHistory] =  reg_cpkrylov(cpk4, b, Q, A, C, G, opts);
 cpk4x1  = cpk4x(1:n);
 cpk4x2  = cpk4x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string4, norm(x-cpk4x)/norm(x));
