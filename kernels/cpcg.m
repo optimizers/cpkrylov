@@ -119,7 +119,6 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
     zeron = zeros(n,1);
     zerom = zeros(m,1);
     x = zeron;
-    %y = zerom;
     a = zerom;
     w = zerom;
     g = -b;
@@ -128,6 +127,11 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
     ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
     p = -r;
     q = -u;
+
+    %%%%%%%%%%%%%%%%%%%
+    %s = -u;
+    %%%%%%%%%%%%%%%%%%%
+    
     residNorm2 = g' * r;
     residNorm = sqrt(residNorm2);
     stopTol = atol + rtol * residNorm;
@@ -162,16 +166,15 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
         a = a + alpha *  q;
         g = g + alpha * Ap;
         w = w + alpha * Cq;
-
+        
         ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
-
         t = a + u;
         residNorm2_new = g' * r + t' * w;
         beta = residNorm2_new / residNorm2;
 
         p = -r + beta * p;
         q = -t + beta * q;
-
+ 
         residNorm2 = residNorm2_new;
         residNorm = sqrt(residNorm2);
         residHistory = [residHistory; residNorm];
@@ -192,6 +195,6 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
     % Wrap up.
     flags.niters = itn;
     flags.solved = residNorm <= stopTol;
-    y = -q;
+    y = a;
 
 end
