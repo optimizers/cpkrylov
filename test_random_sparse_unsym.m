@@ -7,14 +7,17 @@
 % clear;
 % close all;
 
-n = 200; m = 100;
+n = 300; m = 100;
 density = 0.01;
-Q = sprand(n,n,density,1e-1);  % Q may have zeros on diag
-a = 5.0e-1;                     % the smaller a, the worse Q. Small entries on diag?
+rc = 1e-1;
+Q = sprand(n,n,density,rc);    % Q may have zeros on diag
+a = 5.0e-1;                    % the smaller a, the worse Q.
 Q = Q + a*speye(n);
-A = sprand(m,n,density);
+A = sprand(m,n,density,rc);
 % A = 1e8*A;
-C = spdiags(abs(diag(rand(m))),0,m,m);
+% C = spdiags(diag(sprandsym(m,0,rc,1)),0,m,m);           % C diag spd
+density2 = 0.8;
+C = spdiags(abs(diag(sprand(m,m,density2,rc))),0,m,m);  % C diag with entries >= 0
 % C = 1e-2*C;
 K = [Q  A' ; A  -C];
 b = rand(n+m, 1);
@@ -60,12 +63,12 @@ opts.print = true;     % true/false;
 opts.atol = 1.0e-6;
 opts.rtol = 1.0e-6;
 opts.itmax = 500;
-opts.mem = 10;
-opts.restart = 10;
+opts.mem = 30;
+opts.restart = 30;
 
 % Iterative refinement 
 opts.nitref = 1;           % max # iterative refinement steps
-opts.force_itref = false;  % force iterative refinement (true/false)
+opts.force_itref = true;  % force iterative refinement (true/false)
 opts.itref_tol = 1.0e-12;
 % opts.residual_update = true;
 
