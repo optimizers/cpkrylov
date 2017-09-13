@@ -8,17 +8,30 @@
 % close all;
 
 n = 300; m = 100;
-density = 0.01;
-rc = 1e-7;
-Q = sprandsym(n,density,rc,1);
-% Q = sprand(n,n,density,rc);
-% Q = Q + Q' + 1e5*speye(n);
-A = sprand(m,n,density,rc);
+
+% Build Q
+densityQ = 0.02;
+rcQ = 1e-7;
+Q = sprandsym(n,densityQ,rcQ,1);
+dq = 1e-12*ones(n,1);
+alpha = 1e2;
+nn = n/5;
+dq(1:floor(nn),1) = alpha;
+Q = Q + spdiags(dq,0,n,n);
+
+% Build A
+rcA = 1e-1;
+densityA = densityQ;
+A = sprand(m,n,densityA,rcA);
 % A = 1e8*A;
-% C = spdiags(diag(sprandsym(m,0,rc,1)),0,m,m);           % C diag spd
-density2 = 0.8;
-C = spdiags(abs(diag(sprand(m,m,density2,rc))),0,m,m);  % C diag with entries >= 0
-% C = 1e-2*C;
+
+% Build C
+rcC = 1e-8;
+density = 0.8;
+% C = spdiags(diag(sprandsym(m,0,rcC,1)),0,m,m);           % C diag spd
+% C = spdiags(abs(diag(sprand(m,m,density,rcC))),0,m,m);   % C diag with entries >= 0
+C = 1e-4*speye(m);
+
 K = [Q  A' ; A  -C];
 b = rand(n+m, 1);
 
@@ -58,7 +71,7 @@ cpk_string4 = 'CPGMRES';
 opts.print = true;        % true/false;
 opts.atol = 1.0e-6;
 opts.rtol = 1.0e-6;
-opts.itmax = 500;
+opts.itmax = 400;
 opts.mem = 3;             % 3 for symmetric systems;
 opts.restart = 30;
 
