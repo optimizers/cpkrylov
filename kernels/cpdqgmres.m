@@ -104,7 +104,7 @@ function [x, y, flags, stats] = cpdqgmres(b, A, C, M, opts)
     % Set problem sizes and optional arguments.
     n = size(A,1);
     m = size(C,1);
-    atol = 1.0e-8;
+    atol = 1.0e-6;
     rtol = 1.0e-6;
     itmax = n+m;          % which value?????
     mem = 10;
@@ -131,13 +131,18 @@ function [x, y, flags, stats] = cpdqgmres(b, A, C, M, opts)
     % Set up workspace.
     mem = min(mem, itmax);
     g  = zeros(mem+1, 1);
-    V  = zeros(n, mem+1);     % Preconditioned Krylov vectors [v1 v2 ... vk].
-    Q  = zeros(m, mem+1);     % Preconditioned Krylov vectors [q1 q2 ... qk].
-    PV = zeros(n, mem+1);     % Update directions for x: PV := V * inv(R).
-    PQ = zeros(m, mem+1);     % Update directions for q: PQ := Q * inv(R).
-    H  = zeros(mem+1, mem);   % Upper Hessenberg form of A.
-    c  = zeros(mem, 1);       % Givens cosines.
-    s  = zeros(mem, 1);       % Givens sines.
+    V  = zeros(n, mem+1);       % Preconditioned Krylov vectors [v1 v2 ... vk].
+    Q  = zeros(m, mem+1);       % Preconditioned Krylov vectors [q1 q2 ... qk].
+    PV = zeros(n, mem+1);       % Update directions for x: PV := V * inv(R).
+    PQ = zeros(m, mem+1);       % Update directions for q: PQ := Q * inv(R).
+    c  = zeros(mem, 1);         % Givens cosines.
+    s  = zeros(mem, 1);         % Givens sines.
+    H  = zeros(itmax, mem+2);   % Upper Hessenberg form of A, with mem upper
+                                % diagonals. Its mem+2 diagonals are stored  
+                                % as column vectors, according to the tranformation
+                                % (j,k) --> (j,2+k-j). ALL THIS MEMORY IS
+                                % NOT NEEDED. IT WILL BE REMOVED IN THE
+                                % NEXT VERSION.
 
     % Set up zero vectors
     zeron = zeros(n,1);
@@ -197,31 +202,38 @@ function [x, y, flags, stats] = cpdqgmres(b, A, C, M, opts)
         Q(:,kp1pos) = Q(:,kpos) - w(n+1:n+m,1);
         for j = max(1, k-mem+1) : k
             jpos = mod(j-1, mem+1) + 1;
-            H(jpos,kpos) = dot(V(:,jpos), u) + dot(Q(:,jpos), t);
-            V(:,kp1pos) = V(:,kp1pos) - H(jpos,kpos) * V(:,jpos);
-            Q(:,kp1pos) = Q(:,kp1pos) - H(jpos,kpos) * Q(:,jpos);
+            kk = 2+k-j; 
+            H(j,kk) = dot(V(:,jpos), u) + dot(Q(:,jpos), t);
+            V(:,kp1pos) = V(:,kp1pos) - H(j,kk) * V(:,jpos);
+            Q(:,kp1pos) = Q(:,kp1pos) - H(j,kk) * Q(:,jpos);
         end
-        H(kp1pos,kpos) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
+        % kk = k-(k+1)+2 = 1
+        H(k+1,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
 
-        if H(kp1pos,kpos) ~= 0     % Lucky breakdown if = 0.
-            V(:,kp1pos) = V(:,kp1pos) / H(kp1pos,kpos);
-            Q(:,kp1pos) = Q(:,kp1pos) / H(kp1pos,kpos);
+        if H(k+1,1) ~= 0     % Lucky breakdown if = 0.
+            V(:,kp1pos) = V(:,kp1pos) / H(k+1,1);
+            Q(:,kp1pos) = Q(:,kp1pos) / H(k+1,1);
         end
 
         % Apply previous (symmetric) Givens rotations.
-        for j = max(1,k-mem+1) : k-1
+        for j = max(1,k-mem) : k-1
             jpos = mod(j-1, mem+1) + 1;
             jp1pos = mod(j, mem+1) + 1;
-            Hjk = c(jpos) * H(jpos,kpos) + s(jpos) * H(jp1pos,kpos);
-            H(jp1pos,kpos) = s(jpos) * H(jpos,kpos) - c(jpos) * H(jp1pos,kpos);
-            H(jpos,kpos) = Hjk;
+            kk  = k-j+1;       % kk  = 2+k-(j+1)
+            kk1 = kk+1;        % kk1 = 2+k-j
+            Hjk = c(jpos) * H(j,kk1) + s(jpos) * H(j+1,kk);
+            H(j+1,kk) = s(jpos) * H(j,kk1) - c(jpos) * H(j+1,kk);
+            H(j,kk1) = Hjk;
         end
-
+        
         % Compute and apply current (symmetric) Givens rotation:
         % [ck  sk] [H(k,k)  ] = [*]
         % [sk -ck] [H(k+1,k)]   [0].
-        [c(kpos), s(kpos), H(kpos,kpos)] = SymGivens(H(kpos,kpos), H(kp1pos,kpos));
-        H(kp1pos,kpos) = 0;
+        % Indices for H:
+        % (k+1,k) --> (k+1,2+k-(k+1)) = (k+1,1)
+        % (k,k)   --> (k,2+k-k) = (k,2)
+        [c(kpos), s(kpos), H(k,2)] = SymGivens(H(k,2), H(k+1,1));
+        H(k+1,1) = 0;
         g(kp1pos) = s(kpos) * g(kpos);
         g(kpos)   = c(kpos) * g(kpos);
 
@@ -230,11 +242,13 @@ function [x, y, flags, stats] = cpdqgmres(b, A, C, M, opts)
         PQ(:,kpos) = Q(:,kpos);
         for j = max(1,k-mem) : k-1
             jpos = mod(j-1, mem+1) + 1;
-            PV(:,kpos) = PV(:,kpos) - H(jpos,kpos) * PV(:,jpos);
-            PQ(:,kpos) = PQ(:,kpos) - H(jpos,kpos) * PQ(:,jpos);
+            kk = 2+k-j;
+            PV(:,kpos) = PV(:,kpos) - H(j,kk) * PV(:,jpos);
+            PQ(:,kpos) = PQ(:,kpos) - H(j,kk) * PQ(:,jpos);
         end
-        PV(:,kpos) = PV(:,kpos) / H(kpos,kpos);
-        PQ(:,kpos) = PQ(:,kpos) / H(kpos,kpos);
+        % (k,k) --> (k,2+k-k) = (k,2)
+        PV(:,kpos) = PV(:,kpos) / H(k,2);
+        PQ(:,kpos) = PQ(:,kpos) / H(k,2);
         x = x + g(kpos) * PV(:,kpos);
         y = y - g(kpos) * PQ(:,kpos);
 
