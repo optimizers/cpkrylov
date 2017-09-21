@@ -141,9 +141,8 @@ function [x, y, flags, stats] = cpdqgmres(b, A, C, M, opts)
                                 % diagonals. Its mem+2 diagonals are stored  
                                 % as column vectors, according to the tranformation
                                 % (j,k) --> (j,2+k-j). ALL THIS MEMORY IS
-                                % NOT NEEDED. IT WILL BE REMOVED IN THE
-                                % NEXT VERSION.
-
+                                % NOT NEEDED. TODO: REDUCE MEMORY FOR H.
+                               
     % Set up zero vectors
     zeron = zeros(n,1);
     zerom = zeros(m,1);
