@@ -100,6 +100,11 @@ function [x, y, flags, stats] = cpdqgmres_old(b, A, C, M, opts)
 %        residHistory - history of 2-norm of residuals.
 %
 %======================================================================
+% NOTE: for k=2 this implementation of DQGMRES is not equivalent to
+%       GMRES/MINRES when the matrix is symmetric.
+%
+%======================================================================
+
 
     % Set problem sizes and optional arguments.
     n = size(A,1);
