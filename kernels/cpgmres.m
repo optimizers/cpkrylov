@@ -3,11 +3,11 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
 %======================================================================
 % [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
 %
-% Constraint-preconditioned GMRES(r) for generalized saddle-point
+% Constraint-preconditioned GMRES(l) for generalized saddle-point
 % systems.
 %
 %======================================================================
-% Last update, September 9, 2017.
+% Last update, October 21, 2017.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -78,7 +78,7 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
 %                  [default 1e-6],
 %        rtol    - relative tolerance for GMRES stopping criterion
 %                  [default 1e-6],
-%        restart - restart parameter r of GMRES(r) [default 30],
+%        restart - restart parameter l of GMRES(l) [default 30],
 %        reorth  - partial reorthogonalization, true/false [default false],
 %        itmax   - maximum number of GMRES iterations [default n+m],
 %        print   - display info about GMRES iterations [default true].
@@ -98,11 +98,11 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
     % Set problem sizes and optional arguments.
     n = size(A,1);
     m = size(C,1);
-    atol = 1.0e-8;
+    atol = 1.0e-6;
     rtol = 1.0e-6;
-    restart = 30;
+    restart = 20;
     % reorth = false;           % ????
-    itmax = n+m;                % which value?????
+    itmax = n+m;
     display_info = true;
 
     if nargin > 4
@@ -214,6 +214,8 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
                 Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
             end
             H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
+%             fprintf('\n\n K = %d -- H dopo compute next Krylov vector\n', k);
+%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H');  
 
             if H(k+1,k) ~= 0          % Lucky breakdown if = 0.
                 V(:,k+1) = V(:,k+1) / H(k+1,k);
@@ -226,7 +228,9 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
-
+%             fprintf('\n\n K = %d -- H dopo apply previous rotations\n', k);
+%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
+            
             % Compute and apply current (symmetric) Givens rotation:
             % [ck  sk] [H(k,k)  ] = [*]
             % [sk -ck] [H(k+1,k)]   [0]
@@ -236,6 +240,8 @@ function [x, y, flags, stats] = cpgmres(b, A, C, M, opts)
             g(k)   = c(k) * g(k);
             residNorm = abs(g(k+1));
             residHistory = [residHistory; residNorm];
+%             fprintf('\n\n K = %d -- H dopo apply current rotation\n', k);
+%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
 
             % Print current iteration and residual norm (if required).
             if display_info
