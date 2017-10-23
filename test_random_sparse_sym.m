@@ -9,28 +9,38 @@
 
 n = 300; m = 100;
 
-% Build Q
+% Build Q.
 densityQ = 0.02;
-rcQ = 1e-7;
+rcQ = 1.e-8;
 Q = sprandsym(n,densityQ,rcQ,1);
+% Add alpha to nn diagonal entries of Q. Comment the following lines
+% if you do not want to modify Q.
 dq = 1e-12*ones(n,1);
-alpha = 1e2;
-nn = n/5;
+alpha = 5.;
+nn = n/4;
 dq(1:floor(nn),1) = alpha;
 Q = Q + spdiags(dq,0,n,n);
+% condest(Q)
+% dd = spdiags(diag(Q),0,n,n);
+% d1 = spdiags(ones(n,1),0,n,n);
+% condest(dd)
+% condest(Q-dd+d1)
 
-% Build A
-rcA = 1e-1;
+
+% Build A.
+rcA = 1.e-1;
 densityA = densityQ;
 A = sprand(m,n,densityA,rcA);
 % A = 1e8*A;
 
-% Build C
-rcC = 1e-8;
+% Build C.
+rcC = 1.e-8;
 density = 0.8;
+beta = 1e-4;
+% Different ways of building C. Uncomments your choice.
 % C = spdiags(diag(sprandsym(m,0,rcC,1)),0,m,m);           % C diag spd
 % C = spdiags(abs(diag(sprand(m,m,density,rcC))),0,m,m);   % C diag with entries >= 0
-C = 1e-4*speye(m);
+C = beta*speye(m);                                       % C = beta*I
 
 K = [Q  A' ; A  -C];
 b = rand(n+m, 1);
@@ -61,6 +71,8 @@ pause
 
 cpk1 = @cpcg;
 cpk_string1 = 'CPCG';
+cpk22 = @cpcglanczos2;
+cpk_string22 = 'CPCGLANCZOS2';
 cpk2 = @cpcglanczos;
 cpk_string2 = 'CPCGLANCZOS';
 cpk3 = @cpdqgmres;
@@ -68,14 +80,14 @@ cpk_string3 = 'CPDQGMRES';
 cpk4 = @cpgmres;
 cpk_string4 = 'CPGMRES';
 
-opts.print = true;        % true/false;
+opts.print = false;       % true/false;
 opts.atol = 1.0e-6;
 opts.rtol = 1.0e-6;
-opts.itmax = 400;
-opts.mem = 3;             % 3 for symmetric systems;
-opts.restart = 30;
+opts.itmax = 280;
+opts.mem = 2;             % 2 for symmetric systems;
+opts.restart = 20;
 
-% Iterative refinement 
+% Iterative refinement. 
 opts.nitref = 1;          % max # iterative refinement steps
 opts.force_itref = true;  % force iterative refinement (true/false)
 % opts.itref_tol = 1.0e-15;
@@ -83,7 +95,7 @@ opts.force_itref = true;  % force iterative refinement (true/false)
 
 % diary('cpkrylov_sym.txt')
 
-% CPCG
+% CPCG.
 fprintf('\n\n******************* %s *******************\n\n', cpk_string1)
 [cpk1x,  cpk1flags,  cpk1residHistory] =  reg_cpkrylov(cpk1, b, Q, A, C, G, opts);
 cpk1x1  = cpk1x(1:n);
@@ -94,7 +106,18 @@ fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string1, norm(x(n+1:n+m
 fprintf('\n%s - iters = %d\n', cpk_string1, cpk1flags.niters);
 pause
 
-% CPCGLANCZOS
+% CPCGLANCZOS2.
+fprintf('\n\n******************* %s *******************\n\n', cpk_string22)
+[cpk22x,  cpk22flags,  cpk22residHistory] =  reg_cpkrylov(cpk22, b, Q, A, C, G, opts);
+cpk22x1  = cpk22x(1:n);
+cpk22x2  = cpk22x(n+1:n+m);
+fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string22, norm(x-cpk22x)/norm(x));
+fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string22, norm(x(1:n)-cpk22x1)/norm(x(1:n)));
+fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string22, norm(x(n+1:n+m)-cpk22x2)/norm(x(n+1:n+m)));
+fprintf('\n%s - iters = %d\n', cpk_string22, cpk22flags.niters);
+pause
+
+% CPCGLANCZOS.
 fprintf('\n\n******************* %s *******************\n\n', cpk_string2)
 [cpk2x,  cpk2flags,  cpk2residHistory] =  reg_cpkrylov(cpk2, b, Q, A, C, G, opts);
 cpk2x1  = cpk2x(1:n);
@@ -105,7 +128,7 @@ fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string2, norm(x(n+1:n+m
 fprintf('\n%s - iters = %d\n', cpk_string2, cpk2flags.niters);
 pause
 
-% CPDQGMRES
+% CPDQGMRES.
 fprintf('\n\n******************* %s - mem %d *******************\n\n', cpk_string3, opts.mem)
 [cpk3x,  cpk3flags,  cpk3residHistory] =  reg_cpkrylov(cpk3, b, Q, A, C, G, opts);
 cpk3x1  = cpk3x(1:n);
@@ -116,7 +139,7 @@ fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string3, norm(x(n+1:n+m
 fprintf('\n%s - iters = %d\n', cpk_string3, cpk3flags.niters);
 pause
 
-% restarted CPGMRES
+% restarted CPGMRES.
 fprintf('\n\n******************* %s(%d)*******************\n\n', cpk_string4, opts.restart)
 [cpk4x,  cpk4flags,  cpk4residHistory] =  reg_cpkrylov(cpk4, b, Q, A, C, G, opts);
 cpk4x1  = cpk4x(1:n);
@@ -129,13 +152,14 @@ pause
 
 figure;
       
-semilogy([0: size(cpk1residHistory.residHistory,1)-1], cpk1residHistory.residHistory, 'm--', ...
-         [0: size(cpk2residHistory.residHistory,1)-1], cpk2residHistory.residHistory, 'r-', ...
-         [0: size(cpk3residHistory.residHistory,1)-1], cpk3residHistory.residHistory, 'b.-', ...
-         [0: size(cpk4residHistory.residHistory,1)-1], cpk4residHistory.residHistory, 'g:', ...
+semilogy([0: size(cpk1residHistory.residHistory,1)-1],  cpk1residHistory.residHistory,  'm--x', ...
+         [0: size(cpk22residHistory.residHistory,1)-1], cpk22residHistory.residHistory, 'k:+', ...
+         [0: size(cpk2residHistory.residHistory,1)-1],  cpk2residHistory.residHistory,  'r-', ...
+         [0: size(cpk3residHistory.residHistory,1)-1],  cpk3residHistory.residHistory,  'b-.', ...
+         [0: size(cpk4residHistory.residHistory,1)-1],  cpk4residHistory.residHistory,  'g:', ...
          'LineWidth', 2);
 
-legend('CPCG', 'CPCGLANCZOS', 'CPDQGMRES', 'CPGMRES');
+legend('CPCG', 'CPCGLANCZOS2', 'CPCGLANCZOS', 'CPDQGMRES', 'CPGMRES');
 xlabel('iters');
 ylabel('log(residual)');
 title('Residual History');
