@@ -107,87 +107,87 @@ opts.force_itref = true;  % force iterative refinement (true/false)
 
 % CPCG.
 fprintf('\n\n******************* %s *******************\n\n', cpk_string1)
-[cpk1x,  cpk1flags,  cpk1residHistory] =  reg_cpkrylov(cpk1, b, Q, A, C, G, opts);
+[cpk1x,  cpk1stats,  cpk1flag] =  reg_cpkrylov(cpk1, b, Q, A, C, G, opts);
 cpk1x1  = cpk1x(1:n);
 cpk1x2  = cpk1x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string1, norm(x-cpk1x)/norm(x));
 fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string1, norm(x(1:n)-cpk1x1)/norm(x(1:n)));
 fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string1, norm(x(n+1:n+m)-cpk1x2)/norm(x(n+1:n+m)));
-fprintf('\n%s - iters = %d\n', cpk_string1, cpk1flags.niters);
+fprintf('\n%s - iters = %d\n', cpk_string1, cpk1stats.niters);
 pause
 
 % % CPCGLANCZOS2.
 % fprintf('\n\n******************* %s *******************\n\n', cpk_string22)
-% [cpk22x,  cpk22flags,  cpk22residHistory] =  reg_cpkrylov(cpk22, b, Q, A, C, G, opts);
+% [cpk22x,  cpk22stats,  cpk22flag] =  reg_cpkrylov(cpk22, b, Q, A, C, G, opts);
 % cpk22x1  = cpk22x(1:n);
 % cpk22x2  = cpk22x(n+1:n+m);
 % fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string22, norm(x-cpk22x)/norm(x));
 % fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string22, norm(x(1:n)-cpk22x1)/norm(x(1:n)));
 % fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string22, norm(x(n+1:n+m)-cpk22x2)/norm(x(n+1:n+m)));
-% fprintf('\n%s - iters = %d\n', cpk_string22, cpk22flags.niters);
+% fprintf('\n%s - iters = %d\n', cpk_string22, cpk22stats.niters);
 % pause
 % 
 % % CPCGLANCZOS.
 % fprintf('\n\n******************* %s *******************\n\n', cpk_string2)
-% [cpk2x,  cpk2flags,  cpk2residHistory] =  reg_cpkrylov(cpk2, b, Q, A, C, G, opts);
+% [cpk2x,  cpk2stats,  cpk2flag] =  reg_cpkrylov(cpk2, b, Q, A, C, G, opts);
 % cpk2x1  = cpk2x(1:n);
 % cpk2x2  = cpk2x(n+1:n+m);
 % fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string2, norm(x-cpk2x)/norm(x));
 % fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string2, norm(x(1:n)-cpk2x1)/norm(x(1:n)));
 % fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string2, norm(x(n+1:n+m)-cpk2x2)/norm(x(n+1:n+m)));
-% fprintf('\n%s - iters = %d\n', cpk_string2, cpk2flags.niters);
+% fprintf('\n%s - iters = %d\n', cpk_string2, cpk2stats.niters);
 % pause
 
 % CPDQGMRES.
 fprintf('\n\n******************* %s - mem %d *******************\n\n', cpk_string3, opts.mem)
-[cpk3x,  cpk3flags,  cpk3residHistory] =  reg_cpkrylov(cpk3, b, Q, A, C, G, opts);
+[cpk3x,  cpk3stats,  cpk3flag] =  reg_cpkrylov(cpk3, b, Q, A, C, G, opts);
 cpk3x1  = cpk3x(1:n);
 cpk3x2  = cpk3x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string3, norm(x-cpk3x)/norm(x));
 fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string3, norm(x(1:n)-cpk3x1)/norm(x(1:n)));
 fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string3, norm(x(n+1:n+m)-cpk3x2)/norm(x(n+1:n+m)));
-fprintf('\n%s - iters = %d\n', cpk_string3, cpk3flags.niters);
+fprintf('\n%s - iters = %d\n', cpk_string3, cpk3stats.niters);
 pause
 
 opts.mem = 15; 
 
 % CPDQGMRES.
 fprintf('\n\n******************* %s - mem %d *******************\n\n', cpk_string32, opts.mem)
-[cpk32x,  cpk32flags,  cpk32residHistory] =  reg_cpkrylov(cpk32, b, Q, A, C, G, opts);
+[cpk32x,  cpk32stats,  cpk32flag] =  reg_cpkrylov(cpk32, b, Q, A, C, G, opts);
 cpk32x1  = cpk32x(1:n);
 cpk32x2  = cpk32x(n+1:n+m);
 fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string32, norm(x-cpk32x)/norm(x));
 fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string32, norm(x(1:n)-cpk32x1)/norm(x(1:n)));
 fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string32, norm(x(n+1:n+m)-cpk32x2)/norm(x(n+1:n+m)));
-fprintf('\n%s - iters = %d\n', cpk_string32, cpk32flags.niters);
+fprintf('\n%s - iters = %d\n', cpk_string32, cpk32stats.niters);
 pause
 
 % % restarted CPGMRES.
 % fprintf('\n\n******************* %s(%d)*******************\n\n', cpk_string4, opts.restart)
-% [cpk4x,  cpk4flags,  cpk4residHistory] =  reg_cpkrylov(cpk4, b, Q, A, C, G, opts);
+% [cpk4x,  cpk4stats,  cpk4flag] =  reg_cpkrylov(cpk4, b, Q, A, C, G, opts);
 % cpk4x1  = cpk4x(1:n);
 % cpk4x2  = cpk4x(n+1:n+m);
 % fprintf('\n%s - rel err in (x, y) (refsol bsl): %7.1e', cpk_string4, norm(x-cpk4x)/norm(x));
 % fprintf('\n%s - rel err in x (refsol bsl): %7.1e', cpk_string4, norm(x(1:n)-cpk4x1)/norm(x(1:n)));
 % fprintf('\n%s - rel err in y (refsol bsl): %7.1e\n', cpk_string4, norm(x(n+1:n+m)-cpk4x2)/norm(x(n+1:n+m)));
-% fprintf('\n%s - iters = %d\n', cpk_string4, cpk4flags.niters);
+% fprintf('\n%s - iters = %d\n', cpk_string4, cpk4stats.niters);
 % pause
 
 figure;
       
-semilogy([0: size(cpk1residHistory.residHistory,1)-1],  cpk1residHistory.residHistory,  'r--', ...
-         [0: size(cpk3residHistory.residHistory,1)-1],  cpk3residHistory.residHistory,  'b-.', ...
+semilogy([0: size(cpk1stats.residHistory,1)-1],  cpk1stats.residHistory,  'r--', ...
+         [0: size(cpk3stats.residHistory,1)-1],  cpk3stats.residHistory,  'b-.', ...
          'LineWidth', 2);
-%          [0: size(cpk22residHistory.residHistory,1)-1], cpk22residHistory.residHistory, 'k:+', ...
-%          [0: size(cpk2residHistory.residHistory,1)-1],  cpk2residHistory.residHistory,  'r-', ...
-%          [0: size(cpk3residHistory.residHistory,1)-1],  cpk3residHistory.residHistory,  'b-.', ...
-%          [0: size(cpk4residHistory.residHistory,1)-1],  cpk4residHistory.residHistory,  'g:', ...
+%          [0: size(cpk22stats.residHistory,1)-1], cpk22stats.residHistory, 'k:+', ...
+%          [0: size(cpk2stats.residHistory,1)-1],  cpk2stats.residHistory,  'r-', ...
+%          [0: size(cpk3stats.residHistory,1)-1],  cpk3stats.residHistory,  'b-.', ...
+%          [0: size(cpk4stats.residHistory,1)-1],  cpk4stats.residHistory,  'g:', ...
 %          'LineWidth', 2);
 
 minx = 0;
-maxx = max( size(cpk1residHistory.residHistory,1)-1, size(cpk3residHistory.residHistory,1)-1 );
-miny = min( min(cpk1residHistory.residHistory), min(cpk3residHistory.residHistory) );
-maxy = max( max(cpk1residHistory.residHistory), min(cpk3residHistory.residHistory) );
+maxx = max( size(cpk1stats.residHistory,1)-1, size(cpk3stats.residHistory,1)-1 );
+miny = min( min(cpk1stats.residHistory), min(cpk3stats.residHistory) );
+maxy = max( max(cpk1stats.residHistory), min(cpk3stats.residHistory) );
 set(gca, 'Fontsize', 14);
 axis([minx maxx miny maxy]);
 xlabel('iters', 'FontSize', 16);
@@ -198,15 +198,15 @@ set(id, 'FontSize', 16);
 %legend('CPCG', 'CPCGLANCZOS2', 'CPCGLANCZOS', 'CPDQGMRES', 'CPGMRES');
 
 figure
-semilogy([0: size(cpk1residHistory.residHistory,1)-1],  cpk1residHistory.residHistory,  'r--', ...
-         [0: size(cpk3residHistory.residHistory,1)-1],  cpk3residHistory.residHistory,  'b-.', ...
-         [0: size(cpk32residHistory.residHistory,1)-1], cpk32residHistory.residHistory, 'k-',  ...
+semilogy([0: size(cpk1stats.residHistory,1)-1],  cpk1stats.residHistory,  'r--', ...
+         [0: size(cpk3stats.residHistory,1)-1],  cpk3stats.residHistory,  'b-.', ...
+         [0: size(cpk32stats.residHistory,1)-1], cpk32stats.residHistory, 'k-',  ...
          'LineWidth', 2);
 
 minx = 0;
-maxx = max( size(cpk1residHistory.residHistory,1)-1, size(cpk3residHistory.residHistory,1)-1 );
-miny = min( min( min(cpk1residHistory.residHistory), min(cpk3residHistory.residHistory) ), min(cpk32residHistory.residHistory) );
-maxy = max( max( max(cpk1residHistory.residHistory), max(cpk3residHistory.residHistory) ), max(cpk32residHistory.residHistory) );
+maxx = max( size(cpk1stats.residHistory,1)-1, size(cpk3stats.residHistory,1)-1 );
+miny = min( min( min(cpk1stats.residHistory), min(cpk3stats.residHistory) ), min(cpk32stats.residHistory) );
+maxy = max( max( max(cpk1stats.residHistory), max(cpk3stats.residHistory) ), max(cpk32stats.residHistory) );
 set(gca, 'Fontsize', 14);
 axis([minx maxx miny maxy]);
 xlabel('iters', 'FontSize', 16);
