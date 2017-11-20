@@ -1,12 +1,12 @@
-function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
+function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
 
 %======================================================================
-% [x, y, flags, stats] = cpcg(b, A, C, M, opts)
+% [x, y, stats, flags] = cpcg(b, A, C, M, opts)
 %
-% Constraint-preconditioned CG for generalized saddle-point systems.
+% Constraint-preconditioned CG for regularized saddle-point systems.
 %
 %======================================================================
-% Last update, September 9, 2017.
+% Last update, November 20, 2017.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -83,12 +83,12 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
 % OUTPUT ARGUMENTS:
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
-% flag:  struct variable with the following fields:
-%        niters - number of CG iterations performed,
-%        solved - true if residNorm <= stopTol, false otherwise (itmax
-%                 attained);
 % stats: struct variable with the following fields:
-%        residHistory - history of 2-norm of residuals.
+%        niters - number of CG iterations performed,
+%        residHistory - history of 2-norm of residuals;
+% flag:  struct variable with the following fields (for now):
+%        solved - true if residNorm <= stopTol, false otherwise (itmax
+%                 attained).
 %
 %======================================================================
 
@@ -186,11 +186,10 @@ function [x, y, flags, stats] = cpcg(b, A, C, M, opts)
         fprintf('\n'); 
     end
 
-    stats.residHistory = residHistory;
-
     % Wrap up.
-    flags.niters = itn;
     flags.solved = residNorm <= stopTol;
+    stats.niters = itn;
+    stats.residHistory = residHistory;
     y = a;
 
 end

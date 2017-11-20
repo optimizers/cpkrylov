@@ -1,4 +1,4 @@
-function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
+function [x, y, stats, flag] = cpgmres_y(b, A, C, M, G, opts)
 
 %======================================================================
 % [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
@@ -89,7 +89,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 % stats: struct variable with the following fields:
 %        niters - number of GMRES iterations performed,
 %        residHistory - history of 2-norm of residuals;
-% flag:  struct variable with the following fields (for now):
+% flag:  struct variable with the following fields:
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
 %                 attained).
 %
@@ -100,7 +100,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    restart = 20;
+    restart = 30;
     % reorth = false;           % ????
     itmax = n+m;
     display_info = true;
@@ -214,8 +214,6 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
             end
             H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
-%             fprintf('\n\n K = %d -- H after computing next Krylov vector\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H');  
 
             if H(k+1,k) ~= 0          % Lucky breakdown if = 0.
                 V(:,k+1) = V(:,k+1) / H(k+1,k);
@@ -228,9 +226,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
-%             fprintf('\n\n K = %d -- H dopo apply previous rotations\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
-            
+
             % Compute and apply current (symmetric) Givens rotation:
             % [ck  sk] [H(k,k)  ] = [*]
             % [sk -ck] [H(k+1,k)]   [0]
@@ -240,8 +236,6 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
             g(k)   = c(k) * g(k);
             residNorm = abs(g(k+1));
             residHistory = [residHistory; residNorm];
-%             fprintf('\n\n K = %d -- H after applying current rotation\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
 
             % Print current iteration and residual norm (if required).
             if display_info
@@ -253,7 +247,10 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
         z = H(1:k,1:k) \ g(1:k);
         x = x + V(:,1:k) * z;
         q = q + Q(:,1:k) * z;
-        y = y - q;
+        % y = y - q;
+        
+        xy = M * [b - A * x + G * x; zerom];
+        y  = xy(n+1:n+m);
 
         finished = residNorm <= stopTol;
         

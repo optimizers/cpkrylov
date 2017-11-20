@@ -1,13 +1,13 @@
-function [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
+function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 
 %======================================================================
-% [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
+% [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %
-% Driver for constraint-preconditioned Krylov solvers for generalized
+% Driver for constraint-preconditioned Krylov solvers for regularized
 % saddle-point systems.
 %
 %======================================================================
-% Last update, September 9, 2017.
+% Last update, November 20, 2017.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -58,7 +58,7 @@ function [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
-%   Regularized Constraint-Preconditioned Krylov Solvers for General
+%   Constraint-Preconditioned Krylov Solvers for Regularized
 %   Saddle-Point Systems.
 %   TBA
 %
@@ -105,14 +105,13 @@ function [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %   solution resulting fom the application of the preconditioner.    
 %
 % OUTPUT ARGUMENTS
-% x:     n-vector, first n entries of the solution;
-% y:     m-vector, last m entries of the solution;
-% flag:  struct variable with the following fields:
-%        niters - number of iterations performed by the Krylov solver,
+% x:     (n+m)-vector, computed solution;
+% flag:  struct variable with the following fields (for now):
 %        solved - true if the residual norm satisfies the stopping
 %                 condition (see the doc in `method`), false otherwise
 %                 (itmax attained);
 % stats: struct variable with the following fields:
+%        niters - number of iterations performed by the Krylov solver,
 %        residHistory - history of 2-norm of residuals.
 %
 %======================================================================
@@ -141,7 +140,7 @@ function [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
     % Shift linear system so rhs has the form [b ; 0] and then solve it
     xy0 = M * [zeros(n,1); b(n+1:n+m)];
     b1 = b(1:n) - A * xy0(1:n) - B' * xy0(n+1:n+m);
-    [dx, dy, flags, stats] = method(b1, A, C, M, opts);
+    [dx, ~, stats, flag] = method(b1, A, C, M, opts);
 
     % Recover solution of initial system.
     x1 = xy0(1:n) + dx;
@@ -149,9 +148,9 @@ function [x, flags, stats] = reg_cpkrylov(method, b, A, B, C, G, opts)
     x2 = xy0(n+1:n+m) + xy(n+1:n+m);
     x  = [x1; x2];
     
-    % TO  BE REMOVED
-    x2bis = xy0(n+1:n+m) + dy;
-    diffx2 = norm(x2-x2bis);
-    fprintf('\nnorm(x2-x2bis) = %9.2e\n',diffx2);
+    % TO  BE REMOVED (requires dy in output from method)
+    % x2bis = xy0(n+1:n+m) + dy;
+    % diffx2 = norm(x2-x2bis);
+    % fprintf('\nnorm(x2-x2bis) = %9.2e\n',diffx2);
 
 end

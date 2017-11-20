@@ -1,13 +1,13 @@
-function [x, y, flags, stats] = cpcglanczos2(b, A, C, M, opts)
+function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
 %======================================================================
-% [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
+% [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %
 % Constraint-preconditioned Lanczos version of CG (CG-Lanczos) for
-% generalized saddle-point systems.
+% regularized saddle-point systems.
 %
 %======================================================================
-% Last update, September 9, 2017.
+% Last update, November 20, 2017.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -58,7 +58,7 @@ function [x, y, flags, stats] = cpcglanczos2(b, A, C, M, opts)
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
-%   Regularized Constraint-Preconditioned Krylov Solvers for General
+%   Constraint-Preconditioned Krylov Solvers for Regularized
 %   Saddle-Point Systems.
 %   TBA
 %
@@ -83,17 +83,17 @@ function [x, y, flags, stats] = cpcglanczos2(b, A, C, M, opts)
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
-% flag:  struct variable with the following fields:
-%        niters - number of CG-Lanczos iterations performed,
-%        solved - true if residNorm <= stopTol, false otherwise (itmax
-%                 attained);
 % stats: struct variable with the following fields:
-%        residHistory - history of 2-norm of residuals.
+%        niters - number of CG-Lanczos iterations performed,
+%        residHistory - history of 2-norm of residuals;
+% flag:  struct variable with the following fields (for now):
+%        solved - true if residNorm <= stopTol, false otherwise (itmax
+%                 attained).
 %
 %======================================================================
 % NOTE
 %   cpcglanczos2 differs from cpcglanczos in the update of the Lanczos
-%   vector (see lines 187-199).
+%   vector (see lines 189-201).
 %
 %======================================================================
 
@@ -238,10 +238,9 @@ function [x, y, flags, stats] = cpcglanczos2(b, A, C, M, opts)
         fprintf('\n');
     end
 
-    stats.residHistory = residHistory;
-
     % Wrap up.
-    flags.niters = k;
-    flags.solved = (residNorm <= stopTol);
+    stats.niters = k;
+    stats.residHistory = residHistory;
+    flag.solved = (residNorm <= stopTol);
 
 end

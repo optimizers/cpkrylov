@@ -1,13 +1,13 @@
-function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
+function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 
 %======================================================================
-% [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
+% [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %
 % Constraint-preconditioned Lanczos version of CG (CG-Lanczos) for
-% generalized saddle-point systems.
+% regularized saddle-point systems.
 %
 %======================================================================
-% Last update, September 9, 2017.
+% Last update, November 20, 2017.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -58,7 +58,7 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
-%   Regularized Constraint-Preconditioned Krylov Solvers for General
+%   Constraint-Preconditioned Krylov Solvers for Regularized
 %   Saddle-Point Systems.
 %   TBA
 %
@@ -83,12 +83,12 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
-% flag:  struct variable with the following fields:
-%        niters - number of CG-Lanczos iterations performed,
-%        solved - true if residNorm <= stopTol, false otherwise (itmax
-%                 attained);
 % stats: struct variable with the following fields:
-%        residHistory - history of 2-norm of residuals.
+%        niters - number of CG-Lanczos iterations performed,
+%        residHistory - history of 2-norm of residuals;
+% flag:  struct variable with the following fields (for now):
+%        solved - true if residNorm <= stopTol, false otherwise (itmax
+%                 attained).
 %
 %======================================================================
 
@@ -138,7 +138,7 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
     qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
-        errmsg = 'Iter 0: preconditioner appears not positive definite.';
+        errmsg = 'Iter 0: preconditioner does not behave as a spd matrix.';
         error(errmsg);
     end
     if beta ~= 0
@@ -198,7 +198,7 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
         beta = dot(u, vkp1) + dot(t, qkp1);
         if beta < 0
             itstr = num2str(k);
-            errmsg = ['Iter ' itstr ': preconditioner appears not positive definite.'];
+            errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
             error(errmsg);
         end
         if beta ~= 0
@@ -226,10 +226,9 @@ function [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
         fprintf('\n');
     end
 
-    stats.residHistory = residHistory;
-
     % Wrap up.
-    flags.niters = k;
-    flags.solved = (residNorm <= stopTol);
+    stats.niters = k;
+    stats.residHistory = residHistory;
+    flag.solved = (residNorm <= stopTol);
 
 end
