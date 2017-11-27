@@ -106,13 +106,13 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %
 % OUTPUT ARGUMENTS
 % x:     (n+m)-vector, computed solution;
+% stats: struct variable with the following fields:
+%        niters - number of iterations performed by the Krylov solver,
+%        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if the residual norm satisfies the stopping
 %                 condition (see the doc in `method`), false otherwise
-%                 (itmax attained);
-% stats: struct variable with the following fields:
-%        niters - number of iterations performed by the Krylov solver,
-%        residHistory - history of 2-norm of residuals.
+%                 (itmax attained).
 %
 %======================================================================
 
