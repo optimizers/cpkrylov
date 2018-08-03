@@ -7,7 +7,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % regularized saddle-point systems.
 %
 %======================================================================
-% Last update, November 20, 2017.
+% Last update, July 8, 2018.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -35,7 +35,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % The iterations stop when
 %
 %   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (k = itmax),
-% 
+%
 % where residNorm and residNorm0 are the 2-norms of the current and
 % initial residuals, atol and rtol are absolute and relative tolerances,
 % k is the iteration index, and itmax is the maximum number of iterations.
@@ -54,7 +54,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % The linear operatos are defined using the Spot Toolbox by Ewout van
 % den Berg and Michael P. Friedlander.
 % See http://www.cs.ubc.ca/labs/scl/spot.
-% 
+%
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
@@ -65,7 +65,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %======================================================================
 % INPUT ARGUMENTS
 % b:     n-vector, the vector b in the rhs of the saddle-point system;
-% A:     n x n matrix or linear operator, (1,1) block of the saddle- 
+% A:     n x n matrix or linear operator, (1,1) block of the saddle-
 %        point matrix;
 % C:     m x m matrix (m <= n), -C is the (2,2) block of the saddle-point
 %        matrix;
@@ -102,7 +102,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    itmax = n;                
+    itmax = n;
     display_info = true;
 
     if nargin > 4
@@ -127,12 +127,15 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     % Initialize some vectors, including (fake) Lanczos vectors.
     % v0 and q0.
     x = zeron;
-    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk  
+    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk
     u = b;                    % u0 = b - A*x0 = b
-    t = zerom;                % t0 = C * q0 = 0   
+    t = zerom;                % t0 = C * q0 = 0
     vk = zeron;
     qk = zerom;
     
+    oldbeta = 0;              % used to estimate the matrix norm
+    Matnorm2 = 0;             % initialize estimate of matrix norm
+
     if display_info
         fprintf('\n**** Constraint-preconditioned version of CG-Lanczos ****\n\n');
     end
@@ -156,16 +159,29 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     wq = qkp1;
     residNorm = beta;
     residHistory = [residNorm];
+    
+    % For backward error stopping criterion
+    beta1 = beta;
 
     % Misc. initializations.
     k    = 0;                 % iteration index
     dg   = 0;                 % d0
-    zeta = 1;                 % zeta0
+    tau  = 0;                 % tau0
+    delta = 0;                % delta0
+    xnormacc = 0;             % xanormacc0
     low  = 1;                 % l1
     eta  = beta;              % eta1
-
+    rhobar = 1;               % rhobar1
+    
     % Set tolerance.
-    stopTol = atol + rtol * residNorm;
+    % ADD OPTION TO CHOOSE BETWEEN STOPPING CRITERIA (RELATIVE RESIDUAL NORM
+    % AND BACKWARD ERROR) AND MODIFY THIS SECTION OF CODE ACCORDINGLY
+    
+    % Stopping criterion based only on residual
+    % stopTol = atol + rtol * residNorm;
+    
+    % Backward error stopping criterion
+    stopTol = rtol * beta1;
 
     % Print initial iteration and residual norm (if required).
     if display_info
@@ -177,7 +193,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
     % Main loop.
     while residNorm > stopTol && k < itmax
-        
+
         k = k + 1;
 
         % Shift position of Lanczos vectors.
@@ -186,8 +202,9 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         vk = vkp1;
         qk = qkp1;
 
-        % Compute next Lanczos vectors (except for normalization)
-        % using updating formulas of the following type:
+        % Compute next Lanczos vectors, except for normalization,
+        % using updating formulas of the following type
+        % (improve local orthogonality in finite precision):
         % w = Mat*zk, wprec = M*w, wkp1 = wprec - beta* wkm1,
         % alpha = wkp1'*wk, wkp1 = wkp1 - alpha* zk,
         u = A * vk;
@@ -199,7 +216,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         alpha = dot(u, vk) + dot(t, qk);  % STOP if alpha <= 0 ?
         vkp1 = vkp1 - alpha*vk;
         qkp1 = qkp1 - alpha*qk;
-        
+
         % Update x and y
         dg = alpha - low*low * dg;        % dk
         zeta = eta/dg;                    % zetak
@@ -219,18 +236,45 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             qkp1 = qkp1/beta;
         end
 
+        % Compute data for next updates of x and y
         low = beta / dg;                     % lk+1
         eta = -low * eta;                    % etak+1
         wv = vkp1 - low*wv;                  % wvk+1
         wq = qkp1 - low*wq;                  % wqk+1
-
+        
+        % Compute data for 2-norm of [x; y]
+        rho = sqrt(rhobar*rhobar + low*low); % rhok
+        c = rhobar/rho;                      % ck
+        s = low/rho;                         % sk
+        tau = zeta - delta*tau;              % num of tauk and taubark
+        taubar = tau/rhobar;                 % taubark
+        tau = tau/rho;                       % tauk
+        delta = s;                           % deltak+1
+        rhobar = -c;                         % rhobark+1
+    
+        % Estimate Frobenius norm of preconditioned matrix and compute
+        % 2-norm of [x; y]
+        Matnorm2 = Matnorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
+        xnorm2 = xnormacc + taubar*taubar;
+        xnormacc = xnormacc + tau*tau;
+        xnorm = sqrt(xnorm2);
+        Matnorm = sqrt(Matnorm2);
+        oldbeta = beta;
+        
+        % Compute residual norm
         residNorm = beta * abs(zeta);
         residHistory = [residHistory; residNorm];
-        
+
+
         % Print current iteration and residual norm (if required).
         if display_info
-            fprintf(info_fmt, k, residNorm);
+            info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
+            fprintf(info_fmt, k, residNorm, Matnorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
         end
+
+        % TO BE MODIFIED: UPDATE STOPTOL ONLY IF BACKWARD ERROR STOPPING
+        % CRITERION IS USED
+        stopTol = rtol * (Matnorm * xnorm + beta1);
         
     end
 
@@ -244,3 +288,4 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     flag.solved = (residNorm <= stopTol);
 
 end
+
