@@ -74,20 +74,20 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol    - absolute tolerance for GMRES stopping criterion
+%        atol    - absolute tolerance for CP-GMRES stopping criterion
 %                  [default 1e-6],
-%        rtol    - relative tolerance for GMRES stopping criterion
+%        rtol    - relative tolerance for CP-GMRES stopping criterion
 %                  [default 1e-6],
-%        restart - restart parameter l of GMRES(l) [default 30],
+%        restart - restart parameter l of CP-GMRES(l) [default 30],
 %        reorth  - partial reorthogonalization, true/false [default false],
-%        itmax   - maximum number of GMRES iterations [default n+m],
-%        print   - display info about GMRES iterations [default true].
+%        itmax   - maximum number of CP-GMRES iterations [default n+m],
+%        print   - display info about CP-GMRES iterations [default true].
 %
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of GMRES iterations performed,
+%        niters - number of CP-GMRES iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
@@ -100,7 +100,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    restart = 20;
+    restart = 100;   % 20;
     % reorth = false;           % ????
     itmax = n+m;
     display_info = true;

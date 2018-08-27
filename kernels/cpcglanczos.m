@@ -3,7 +3,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %======================================================================
 % [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %
-% Constraint-preconditioned Lanczos version of CG (CG-Lanczos) for
+% Constraint-preconditioned Lanczos version of CG (CGLanczos) for
 % regularized saddle-point systems.
 %
 %======================================================================
@@ -73,18 +73,18 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for CG-Lanczos stopping criterion
+%        atol  - absolute tolerance for CP-CGLanczos stopping criterion
 %                [default 1e-6],
-%        rtol  - relative tolerance for CG-Lanczos stopping criterion
+%        rtol  - relative tolerance for CP-CGLanczos stopping criterion
 %                [default 1e-6],
-%        itmax - maximum number of CG-Lanczos iterations [default n],
-%        print - display info about CG-Lanczos iterations [default true].
+%        itmax - maximum number of CP-CGLanczos iterations [default n],
+%        print - display info about CP-CGLanczos iterations [default true].
 %
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of CG-Lanczos iterations performed,
+%        niters - number of CP-CGLanczos iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
@@ -129,7 +129,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     qk = zerom;
     
     if display_info
-        fprintf('\n**** Constraint-preconditioned version of CG-Lanczos ****\n\n');
+        fprintf('\n**** Constraint-preconditioned version of CP-CGLanczos ****\n\n');
     end
 
     % Set Lanczos vectors v1 and q1, and initial residual norm.
@@ -190,13 +190,14 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
         x = x + zeta * wv;
         y = y - zeta * wq;                % qk = qk-1 + zetak*wqk, yk = y0-qk = -qk
 
-        % Compute next Lanczos vectors and upddate residual norm.
+        % Compute next Lanczos vectors and update residual norm.
         vprec = M * [u; -t];
         vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
         qkp1 = qk - vprec(n+1:n+m);
         qkp1 = qkp1 - alpha*qk - beta*qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
         if beta < 0
+            % beta
             itstr = num2str(k);
             errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
             error(errmsg);

@@ -81,19 +81,19 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for DQGMRES stopping criterion
+%        atol  - absolute tolerance for CP-DQGMRES stopping criterion
 %                [default 1e-6],
-%        rtol  - relative tolerance for DQGMRES stopping criterion
+%        rtol  - relative tolerance for CP-DQGMRES stopping criterion
 %                [default 1e-6],
-%        mem   - memory in DQGMRES [default 10];
-%        itmax - maximum number of DQGMRES iterations [default n+m],
-%        print - display info about DQGMRES iterations [default true].
+%        mem   - memory in CP-DQGMRES [default 10];
+%        itmax - maximum number of CP-DQGMRES iterations [default n+m],
+%        print - display info about CP-DQGMRES iterations [default true].
 %
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of DQGMRES iterations performed,
+%        niters - number of CP-DQGMRES iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax

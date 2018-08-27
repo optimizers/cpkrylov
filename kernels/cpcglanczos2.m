@@ -3,7 +3,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %======================================================================
 % [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %
-% Constraint-preconditioned Lanczos version of CG (CG-Lanczos) for
+% Constraint-preconditioned Lanczos version of CG (CGLanczos) for
 % regularized saddle-point systems.
 %
 %======================================================================
@@ -73,18 +73,18 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for CG-Lanczos stopping criterion
+%        atol  - absolute tolerance for CP-CGLanczos stopping criterion
 %                [default 1e-6],
-%        rtol  - relative tolerance for CG-Lanczos stopping criterion
+%        rtol  - relative tolerance for CP-CGLanczos stopping criterion
 %                [default 1e-6],
-%        itmax - maximum number of CG-Lanczos iterations [default n],
-%        print - display info about CG-Lanczos iterations [default true].
+%        itmax - maximum number of CP-CGLanczos iterations [default n],
+%        print - display info about CP-CGLanczos iterations [default true].
 %
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of CG-Lanczos iterations performed,
+%        niters - number of CP-CGLanczos iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
@@ -139,7 +139,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     Matnorm2 = 0;             % initialize estimate of matrix norm
 
     if display_info
-        fprintf('\n**** Constraint-preconditioned version of CG-Lanczos ****\n\n');
+        fprintf('\n**** Constraint-preconditioned version of CP-CGLanczos ****\n\n');
     end
 
     % Set Lanczos vectors v1 and q1, and initial residual norm.

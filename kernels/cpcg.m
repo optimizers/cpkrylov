@@ -73,18 +73,18 @@ function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for CG stopping criterion
+%        atol  - absolute tolerance for CP-CG stopping criterion
 %                [default 1e-6],
-%        rtol  - relative tolerance for CG stopping criterion
+%        rtol  - relative tolerance for CP-CG stopping criterion
 %                [default 1e-6],
-%        itmax - maximum number of CG iterations [default n],
-%        print - display info about CG iterations [default true].
+%        itmax - maximum number of CP-CG iterations [default n],
+%        print - display info about CP-CG iterations [default true].
 %
 % OUTPUT ARGUMENTS:
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of CG iterations performed,
+%        niters - number of CP-CG iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax

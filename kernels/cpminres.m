@@ -1,7 +1,7 @@
 function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 
 %======================================================================
-% [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
+% [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 %
 % Constraint-preconditioned MINRES for regularized saddle-point
 % systems.
@@ -39,7 +39,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 % NOTE that
 % - the argument A may be a matrix or a linear operator, but C and G
 %   must be explicit matrices;
-% - B is not explicitly passed to cpcglanczos as an argument, but it
+% - B is not explicitly passed to cpminres as an argument, but it
 %   has been used to form the constraint preconditioner stored
 %   in M (see reg_cpkrylov.m);
 % - M must be an operator such that M*z returns the solution of
@@ -69,18 +69,18 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 %        vector;
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for CG-Lanczos stopping criterion
+%        atol  - absolute tolerance for CP-MINRES stopping criterion
 %                [default 1e-6],
-%        rtol  - relative tolerance for CG-Lanczos stopping criterion
+%        rtol  - relative tolerance for CP-MINRES stopping criterion
 %                [default 1e-6],
-%        itmax - maximum number of CG-Lanczos iterations [default n],
-%        print - display info about CG-Lanczos iterations [default true].
+%        itmax - maximum number of CP-MINRES iterations [default n],
+%        print - display info about CP-MINRES iterations [default true].
 %
 % OUTPUT ARGUMENTS
 % x:     n-vector, first n entries of the solution;
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
-%        niters - number of CG-Lanczos iterations performed,
+%        niters - number of CP-MINRES iterations performed,
 %        residHistory - history of 2-norm of residuals;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
