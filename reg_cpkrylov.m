@@ -116,6 +116,12 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %
 %======================================================================
 
+    % Check number of input parameters
+    if (nargin < 6)
+        errmsg = 'reg_cpkrylov: not enough inputs';
+        error(errmsg);
+    end
+    
     % Set up coefficient matrix and constraint preconditioner.
     n = size(A,1);
     m = size(B,1);
@@ -142,15 +148,15 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     b1 = b(1:n) - A * xy0(1:n) - B' * xy0(n+1:n+m);
     [dx, ~, stats, flag] = method(b1, A, C, M, opts);
 
-    % Recover solution of initial system.
+    % Recover solution of initial system
     x1 = xy0(1:n) + dx;
     xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
     x2 = xy0(n+1:n+m) + xy(n+1:n+m);
     x  = [x1; x2];
     
     % TO  BE REMOVED (requires dy in output from method)
-    % x2bis = xy0(n+1:n+m) + dy;
-    % diffx2 = norm(x2-x2bis);
-    % fprintf('\nnorm(x2-x2bis) = %9.2e\n',diffx2);
+%     x2bis = xy0(n+1:n+m) + dy;
+%     diffx2 = norm(x2-x2bis)/norm(x2);
+%     fprintf('\nnorm(x2-x2bis)/norm(x2) = %9.2e\n',diffx2);
 
 end
