@@ -210,14 +210,14 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         epsln  =             sn*beta;  % epsln2  = 0        epslnk+1
         dltbar =           - cs*beta;  % dltbar2 = beta2    dltbark+1
 
-        % Compute next rotation Qk
+        % Compute next rotation Qk and update tau.
         gamma  = norm([gmmbar beta]); % gammak
         cs     = gmmbar/gamma;        % ck
         sn     = beta/gamma;          % sk
         tau    = cs*taubar ;          % tauk
         taubar = sn*taubar ;          % taubark+1
         
-        % Update  x and y
+        % Update  x and y.
         wv1 = wv2;
         wv2 = wv;
         wq1 = wq2;
@@ -227,8 +227,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         x   = x + tau*wv;
         y   = y - tau*wq;
 
-        
-       % Set residual norm
+       % Set residual norm.
        residNorm = taubar;
        residHistory = [residHistory; residNorm];
         
