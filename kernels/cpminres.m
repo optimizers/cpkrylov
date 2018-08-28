@@ -210,7 +210,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         epsln  =             sn*beta;  % epsln2  = 0        epslnk+1
         dltbar =           - cs*beta;  % dltbar2 = beta2    dltbark+1
 
-        % Compute next rotation Qk and update tau.
+        % Compute next rotation Qk and next tau.
         gamma  = norm([gmmbar beta]); % gammak
         cs     = gmmbar/gamma;        % ck
         sn     = beta/gamma;          % sk
