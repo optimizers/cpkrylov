@@ -85,15 +85,10 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
 %        niters         - number of CP-SYMMLQ iterations performed,
-%        cgresidHistory - history of 2-norm of CG residuals
-%                         (last entry corresponds to (niters+1)-th CG
-%                         iterate),                              
-%        lqresidHistory - history of 2-norm of SYMMLQ residuals
-%                         (last entry corresponds to niters-th SYMMLQ
-%                         iterate),
-%        qrresidHistory - history of 2-norm of MINRES residuals
-%                         (last entry corresponds to niters-th MINRES
-%                         iterate).
+%        cgresidHistory - history of 2-norm of CG residuals,                   
+%        lqresidHistory - history of 2-norm of LQ residuals,
+%        qrresidHistory - history of 2-norm of MINRES residuals,
+%                         see Paige & Saunders, SINUM 1975,
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
 %                 attained).
@@ -160,7 +155,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
     % Set tolerance.
     stopTol = atol + rtol * cgresidNorm;
     
-    % Initialize histories of residual norms.
+    % Initialize histories of CG, LQ and MINRES residual norms.
     if cgresidNorm <= stopTol
         lqresidNorm    = beta1;
         qrresidNorm    = beta1;
@@ -176,7 +171,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
     % Set tolerance.
     stopTol = atol + rtol * cgresidNorm;
 
-    % Print initial iteration and residual norms (if required).
+    % Print initial iteration index and residual norms (if required).
     if display_info
         fprintf('the printed |cgresid| is one iter ahead, unless the solver\n');
         fprintf('stops at iter = 0\n\n');
@@ -228,7 +223,8 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
         % Only cgresidNorm is checked in the stopping criterion.
         while cgresidNorm > stopTol && k < itmax
             
-            % Update estimate of matrix norm and residual norms.
+            % Update estimate of matrix norm, and LQ, MINRES and CG
+            % residual norms.
             matnorm = sqrt(matnorm2);
             epsmat  = matnorm * eps;
             den     = gammabar;
@@ -324,8 +320,8 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
         lqresidHistory = [lqresidHistory; lqresidNorm];
         qrresidHistory = [qrresidHistory; qrresidNorm];
         
-        % Align CG residual norm history with SYMMLQ and MINRES
-        % residual norm history.
+        % Align CG residual norm history with LQ and MINRES
+        % residual norm histories.
         cgresidHistory = [beta1; cgresidHistory];
         
         % Move to CG solution if cgresidNorm < lqresidNorm.
@@ -336,7 +332,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
             y = y - zetabar * wq;
         end
         
-        %  Add the step along rhs.
+        %  Add the step along first Lanczos vector.
         vprec = M * [b; zerom];
         vk  = vprec(1:n);
         qk  = - vprec(n+1:n+m);
