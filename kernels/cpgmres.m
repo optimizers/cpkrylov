@@ -163,8 +163,8 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
         % worthwhile?
         q = zerom;
         if outer == 1
-            u = b;                % u_0 = b - A*x_0 = b
-            t = zerom;            % t_0 = C*y_0 = C*q0 = 0, y0 = q0 = 0
+            u = b;                % u_0 = b - A * x_0 = b
+            t = zerom;            % t_0 =     C * q0 = 0, y0 = q0 = 0
             w = M * [u; -t];
             V(:,1) = w(1:n,1);
             Q(:,1) = - w(n+1:n+m,1);

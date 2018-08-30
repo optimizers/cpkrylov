@@ -119,8 +119,8 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     % v0 and q0.
     x = zeron;
     y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk  
-    u = b;                    % u0 = b - A*x0 = b
-    t = zerom;                % t0 = C * q0 = 0   
+    u = b;                    % u0 = b - A * x0 = b
+    t = zerom;                % t0 =     C * q0 = 0   
     vk = zeron;
     qk = zerom;
     
@@ -151,12 +151,12 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     residHistory = [residNorm];
 
     % Misc. initializations.
-    k      = 0;                % iteration index
-    dltbar = 0;
-    epsln  = 0;
-    taubar = beta;
-    cs    = -1; 
-    sn    = 0;
+    k        = 0;              % iteration index
+    deltabar = 0;
+    epsln    = 0;
+    taubar   = beta;
+    cs       = -1; 
+    sn       = 0;
 
     % Set tolerance.
     stopTol = atol + rtol * residNorm;
@@ -183,14 +183,14 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         % Compute next Lanczos vectors and update residual norm.
         u = A * vk;
         t = C * qk;
-        alpha = dot(u, vk) + dot(t, qk);  % STOP if alpha <= 0 ?
+        alpha = dot(u, vk) + dot(t, qk);
         vprec = M * [u; -t];
         vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
         qkp1 = qk - vprec(n+1:n+m);
         qkp1 = qkp1 - alpha*qk - beta*qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
         if beta < 0
-            % beta
+            beta
             itstr = num2str(k);
             errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
             error(errmsg);
@@ -202,20 +202,20 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         end
 
         % Apply previous rotation Qk-1 to get
-        %   [deltak epslnk+1] = [cs  sn][dbark    0   ]
-        %   [gbark  dbark+1 ]   [sn -cs][alphak betak+1].
-        oldeps = epsln;
-        delta  = cs*dltbar + sn*alpha; % delta1  = 0        deltak
-        gmmbar = sn*dltbar - cs*alpha; % gmmbar1 = alpha1   gmmbark
-        epsln  =             sn*beta;  % epsln2  = 0        epslnk+1
-        dltbar =           - cs*beta;  % dltbar2 = beta2    dltbark+1
+        %   [deltak    epslnk+1] = [cs  sn][dbark    0   ]
+        %   [gammabark dbark+1 ]   [sn -cs][alphak betak+1].
+        oldeps   = epsln;
+        delta    = cs*deltabar + sn*alpha; % delta1    = 0        deltak
+        gammabar = sn*deltabar - cs*alpha; % gammabar1 = alpha1   gammabark
+        epsln    =             sn*beta;    % epsln2    = 0        epslnk+1
+        deltabar =           - cs*beta;    % deltabar2 = beta2    deltabark+1
 
         % Compute next rotation Qk and next tau.
-        gamma  = norm([gmmbar beta]); % gammak
-        cs     = gmmbar/gamma;        % ck
-        sn     = beta/gamma;          % sk
-        tau    = cs*taubar ;          % tauk
-        taubar = sn*taubar ;          % taubark+1
+        gamma  = norm([gammabar beta]); % gammak
+        cs     = gammabar/gamma;        % ck
+        sn     = beta/gamma;            % sk
+        tau    = cs*taubar ;            % tauk
+        taubar = sn*taubar ;            % taubark+1
         
         % Update  x and y.
         wv1 = wv2;

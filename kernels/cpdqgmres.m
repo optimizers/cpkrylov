@@ -149,9 +149,9 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 
     % Initialize some vectors
     x = zeron;
-    y = zerom;
-    u = b;                    % u_0 = b - A*x_0 = b
-    t = zerom;                % t_0 = C * q_0 = 0
+    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk 
+    u = b;                    % u_0 = b - A * x_0 = b
+    t = zerom;                % t_0 =     C * q_0 = 0
 
     % Set Lanczos vectors v1 and q1, and initial residual norm.
     w = M * [u; t];           % M * [u0; -t0], t0 = 0

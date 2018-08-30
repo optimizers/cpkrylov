@@ -130,13 +130,13 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     % v0 and q0.
     x = zeron;
     y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk
-    u = b;                    % u0 = b - A*x0 = b
-    t = zerom;                % t0 = C * q0 = 0
+    u = b;                    % u0 = b - A * x0 = b
+    t = zerom;                % t0 =     C * q0 = 0
     vk = zeron;
     qk = zerom;
     
-    oldbeta = 0;              % used to estimate the matrix norm
-    Matnorm2 = 0;             % initialize estimate of matrix norm
+    betaold = 0;              % used to estimate the matrix norm
+    matnorm2 = 0;             % initialize estimate of matrix norm
 
     if display_info
         fprintf('\n**** Constraint-preconditioned version of CP-CGLanczos ****\n\n');
@@ -145,8 +145,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     % Set Lanczos vectors v1 and q1, and initial residual norm.
     vprec = M * [u; t];       % M * [u ; -t0], t0 = 0
     vkp1  = vprec(1:n);
-    qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
-    beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
+    qkp1  = - vprec(n+1:n+m); % q1   = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
+    beta  = dot(u, vkp1);     % beta = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
         errmsg = 'Iter 0: preconditioner does not behave as a spd matrix.';
         error(errmsg);
@@ -248,12 +248,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     
         % Estimate Frobenius norm of preconditioned matrix and compute
         % 2-norm of [x; y]
-        Matnorm2 = Matnorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
+        matnorm2 = matnorm2 + alpha * alpha + beta * beta + betaold * betaold;
         xnorm2 = xnormacc + taubar*taubar;
         xnormacc = xnormacc + tau*tau;
         xnorm = sqrt(xnorm2);
-        Matnorm = sqrt(Matnorm2);
-        oldbeta = beta;
+        matnorm = sqrt(matnorm2);
+        betaold = beta;
         
         % Compute residual norm
         residNorm = beta * abs(zeta);
@@ -263,12 +263,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         % Print current iteration and residual norm (if required).
         if display_info
             info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
-            fprintf(info_fmt, k, residNorm, Matnorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
+            fprintf(info_fmt, k, residNorm, matnorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
         end
 
         % TO BE MODIFIED: UPDATE STOPTOL ONLY IF BACKWARD ERROR STOPPING
         % CRITERION IS USED
-        stopTol = rtol * (Matnorm * xnorm + beta1);
+        stopTol = rtol * (matnorm * xnorm + beta1);
         
     end
 

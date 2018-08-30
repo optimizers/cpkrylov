@@ -123,8 +123,8 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     % v0 and q0.
     x = zeron;
     y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk  
-    u = b;                    % u0 = b - A*x0 = b
-    t = zerom;                % t0 = C * q0 = 0   
+    u = b;                    % u0 = b - A * x0 = b
+    t = zerom;                % t0 =     C * q0 = 0   
     vk = zeron;
     qk = zerom;
     
@@ -135,8 +135,8 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     % Set Lanczos vectors v1 and q1, and initial residual norm.
     vprec = M * [u; t];       % M * [u ; -t0], t0 = 0
     vkp1  = vprec(1:n);
-    qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
-    beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
+    qkp1  = - vprec(n+1:n+m); % q1   = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
+    beta  = dot(u, vkp1);     % beta = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
         errmsg = 'Iter 0: preconditioner does not behave as a spd matrix.';
         error(errmsg);
