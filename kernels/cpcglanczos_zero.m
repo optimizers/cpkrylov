@@ -1,25 +1,84 @@
-function [x, y, flags, stats] = cpcglanczos_zero(A, B, C, b, opts)
-%
-% [x, y, flags, stats] = cpcglanczos(A, B, C, b, opts)
-%
-% =========================================================================
-% DOC TO BE WRITTEN, JUST REMBER THAT
-% the system matrix and the preconditioner are regularized saddle-point
-% ones.
-%
-%    System                                Preconditioner
-%
-%    [ A  B' ] [ x ] = [ b1 ]             [ G  B' ]
-%    [ B  -C ] [ y ]   [ b2 ]             [ B  -C ]
-%
-%
-% INSERT SHORT DESCRIPTION of the solution of the tridiagonal system
-% arising from Lanczos process (so that the meaning of the variables
-% used next can be recognized)
-%
-% NOTES:
-% - do not keep both q and y=-q, but use only y;
-% - B not explicitly used if starting guess = 0;
+function [x, y, flags, stats] = cpcglanczos2(b, A, B, C, M, opts)
+%======================================================================
+    % [x, y, flags, stats] = cpcglanczos(b, A, C, M, opts)
+    %
+    % Constraint-preconditioned Lanczos version of CG (CG-Lanczos)
+    %
+    % Solve the regularized saddle-point system
+    %
+    %  [ A   B' ] [x] = [b]
+    %  [ B  -C  ] [y]   [0]
+    %
+    % satisfying the following conditions:
+    %
+    % suppose C = EDE' is a decomposition of C with D nonsingular;
+    % the block-diagonal matrix blkdiag(A, inv(D)) must be positive
+    % definite on the nullspace of [B E].
+    %
+    % The method uses a constraint preconditioner of the form
+    %
+    %  [ G   B' ]
+    %  [ B  -C  ],
+    %
+    % where G is an approximation of H, and must be chosen so that
+    % blkdiag(G, inv(D)) is positive definite on the nullspace of [B E].
+    %
+    % Note that B is not explicitly passed to cpcglanczos as an argument,
+    % but it has been used to form the constraint preconditioner stored
+    % in M (see reg_cpkrylov.m). M must be an operator such that M*z
+    % returns the solution of
+    %
+    %  [ G   B' ] [r] = [z1]
+    %  [ B  -C  ] [u]   [z2].
+    %
+    % The iterations stop either when
+    %
+    %          residNorm <= stopTol = atol + rtol * residNorm0,
+    % 
+    % where residNorm and residNorm0 are the 2-norms of the current and
+    % initial residuals, and atol and rtol are absolute and relative
+    % tolerances, or when a maximum number of iterations is achieved.
+    %
+    % Reference:
+    %   D. di Serafino and D. Orban,
+    %   Regularized Constraint-Preconditioned Krylov Solvers for General
+    %   Saddle-Point Systems.
+    %   TBA
+    %
+    %======================================================================
+    % daniela.diserafino@unicampania.it, 2017
+    % dominique.orban@gerad.ca, 2017.
+    %
+    %======================================================================
+    % INPUT ARGUMENTS
+    % b:     n-vector, the vector b in the rhs of the saddle-point system;
+    % A:     nxn matrix or linear operator, the (1,1) block in the saddle 
+    %        point matrix;
+    % C:     mxn matrix (m<=n), -C is the (2,2) block in the saddle-point
+    %        matrix;
+    % M:     operator, the action of the constraint preconditioner on a
+    %        vector;
+    % opts:  [optional] struct variable with the following (possible)
+    %        entries:
+    %        atol  - absolute tolerance for CG-Lanczos stopping criterion
+    %                [default 1e-6],
+    %        rtol  - relative tolerance for CG-Lanczos stopping criterion
+    %                [default 1e-6],
+    %        itmax - maximum number of CG-Lanczos iterations [default n],
+    %        print - display info about CG-Lanczos iterations [default true].
+    %
+    % OUTPUT ARGUMENTS
+    % x:     n-vector, first n entries of the solution;
+    % y:     m-vector, last m entries of the solution;
+    % flag:  struct variable with the following entries:
+    %        niters - number of CG-Lanczos iterations performed,
+    %        solved - true if residNorm <= stopTol, false otherwise;
+    % stats: struct variable with the following entries:
+    %        residHistory - history of 2-norm of residuals.
+    %
+    %======================================================================
+
+
 % - differs from cpcglanczos in the computation of u, t, qkp1 (this
 %   computation is theoretically equivalent).
 %
@@ -108,7 +167,7 @@ eta  = beta;   % eta_1
 % Set tolerance
 stopTol = atol + rtol * residNorm;
 
-% Print initial residual norm (if required)
+% Print initial iteration and residual norm (if required).
 if display_info
     header_fmt = '%6s  %7s\n';
     info_fmt = '%5d%1s  %7.1e\n';
@@ -118,6 +177,7 @@ end
 
 % Main loop.
 while residNorm > stopTol && k < itmax
+    
     k = k + 1;
 
     % Shift position of Lanczos vectors
@@ -158,6 +218,13 @@ while residNorm > stopTol && k < itmax
 
     residNorm = beta * abs(zeta);
     residHistory = [residHistory; residNorm];
+    
+    
+    % Print current iteration and residual norm (if required).
+    if display_info
+        fprintf(info_fmt, k, residNorm);
+    end
+    
 end
 
 %y = -q;
@@ -171,3 +238,5 @@ stats.residHistory = residHistory;
 % Wrap up
 flags.niters = k;
 flags.solved = (residNorm <= stopTol);
+
+end

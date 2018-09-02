@@ -330,7 +330,7 @@ function [x, y, stats, flag] = cpsymmlq_v0(b, A, C, M, opts)
     % Wrap up.
     stats.niters          = k;
     stats.cgresidHistory  = cgresidHistory;
-    stats.clqresidHistory = lqresidHistory;
+    stats.lqresidHistory = lqresidHistory;
     flag.solved           = (cgresidNorm <= stopTol);
 
 end
