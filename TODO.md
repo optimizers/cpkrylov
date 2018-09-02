@@ -6,5 +6,5 @@
 - use `logging4matlab`
 - main driver should just pass `b1`, no need to pass the block of zeros --- DONE
 - the `dy` coming out of the iterative solver results in an incorrect `y` if we update `y = y0 + dy` --- FIXED
-- CPMINRES
-- CPSYMMLQ
+- CPMINRES --- DONE
+- CPSYMMLQ --- DONE
