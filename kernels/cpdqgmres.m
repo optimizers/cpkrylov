@@ -138,18 +138,18 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     c  = zeros(mem, 1);         % Givens cosines.
     s  = zeros(mem, 1);         % Givens sines.
     H  = zeros(itmax, mem+2);   % Upper Hessenberg form of A, with mem upper
-                                % diagonals. Its mem+2 diagonals are stored  
+                                % diagonals. Its mem+2 diagonals are stored
                                 % as column vectors, according to the tranformation
                                 % (j,k) --> (j,2+k-j). ALL THIS MEMORY IS
                                 % NOT NEEDED. TODO: REDUCE MEMORY FOR H.
-                               
+
     % Set up zero vectors
     zeron = zeros(n,1);
     zerom = zeros(m,1);
 
     % Initialize some vectors
     x = zeron;
-    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk 
+    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk
     u = b;                    % u_0 = b - A * x_0 = b
     t = zerom;                % t_0 =     C * q_0 = 0
 
@@ -179,11 +179,11 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     end
 
     % Main loop.
-    
+
     % The following stopping criterion compensates for the lag in the
-    % residual, but usually increases the number of iterations. 
+    % residual, but usually increases the number of iterations.
     % while sqrt(max(1, k-mem+1)) * residNorm > stopTol && k < itmax
-    
+
     while residNorm > stopTol && k < itmax  % less accurate, but acceptable
 
         k = k + 1;
@@ -201,7 +201,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         Q(:,kp1pos) = Q(:,kpos) - w(n+1:n+m,1);
         for j = max(1, k-mem+1) : k
             jpos = mod(j-1, mem+1) + 1;
-            kk = 2+k-j; 
+            kk = 2+k-j;
             H(j,kk) = dot(V(:,jpos), u) + dot(Q(:,jpos), t);
             V(:,kp1pos) = V(:,kp1pos) - H(j,kk) * V(:,jpos);
             Q(:,kp1pos) = Q(:,kp1pos) - H(j,kk) * Q(:,jpos);
