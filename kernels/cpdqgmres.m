@@ -191,6 +191,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         % Set position in circular stack where (k+1)-st Krylov vector should go.
         kpos = mod(k-1, mem+1) + 1;  % Position corresponding to k in the circular stack.
         kp1pos = mod(k, mem+1) + 1;  % Position corresponding to k+1 in the circular stack.
+        rotpos = mod(k-1, mem) + 1;  % Position of the current rotation parameters
 
         % Compute next Krylov vectors from the modified Gram-Schmidt process.
         % Only orthogonalize against the most recent min(k,mem) vectors.
@@ -218,23 +219,24 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         for j = max(1,k-mem) : k-1
             jpos = mod(j-1, mem+1) + 1;
             jp1pos = mod(j, mem+1) + 1;
+            jrotpos = mod(j-1, mem) + 1;
             kk  = k-j+1;       % kk  = 2+k-(j+1)
             kk1 = kk+1;        % kk1 = 2+k-j
-            Hjk = c(jpos) * H(j,kk1) + s(jpos) * H(j+1,kk);
-            H(j+1,kk) = s(jpos) * H(j,kk1) - c(jpos) * H(j+1,kk);
+            Hjk = c(jrotpos) * H(j,kk1) + s(jrotpos) * H(j+1,kk);
+            H(j+1,kk) = s(jrotpos) * H(j,kk1) - c(jrotpos) * H(j+1,kk);
             H(j,kk1) = Hjk;
         end
-        
+
         % Compute and apply current (symmetric) Givens rotation:
         % [ck  sk] [H(k,k)  ] = [*]
         % [sk -ck] [H(k+1,k)]   [0].
         % Indices for H:
         % (k+1,k) --> (k+1,2+k-(k+1)) = (k+1,1)
         % (k,k)   --> (k,2+k-k) = (k,2)
-        [c(kpos), s(kpos), H(k,2)] = SymGivens(H(k,2), H(k+1,1));
+        [c(rotpos), s(rotpos), H(k,2)] = SymGivens(H(k,2), H(k+1,1));
         H(k+1,1) = 0;
-        g(kp1pos) = s(kpos) * g(kpos);
-        g(kpos)   = c(kpos) * g(kpos);
+        g(kp1pos) = s(rotpos) * g(kpos);
+        g(kpos)   = c(rotpos) * g(kpos);
 
         % Update directions PV and PQ, and solution [x; y].
         PV(:,kpos) = V(:,kpos);
