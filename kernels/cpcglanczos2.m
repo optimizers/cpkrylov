@@ -281,6 +281,15 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     % Wrap up.
     stats.niters = k;
     stats.residHistory = residHistory;
-    flag.solved = (residNorm <= stopTol);
+    flag.solved = false;
+    stats.status = 'maximum number of iterations';
+    if residNorm <= stopTol
+        flags.solved = true;
+        stats.status = 'residual small compared to initial residual';
+    end
+    if residNorm <= bstopTol
+        flags.solved = true;
+        stats.status = 'backward error small';
+    end
 
 end
