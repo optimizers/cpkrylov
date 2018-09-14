@@ -208,11 +208,11 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
             Q(:,kp1pos) = Q(:,kp1pos) - H(j,kk) * Q(:,jpos);
         end
         % kk = k-(k+1)+2 = 1
-        H(k+1,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
+        H(k,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
 
-        if H(k+1,1) ~= 0     % Lucky breakdown if = 0.
-            V(:,kp1pos) = V(:,kp1pos) / H(k+1,1);
-            Q(:,kp1pos) = Q(:,kp1pos) / H(k+1,1);
+        if H(k,1) ~= 0     % Lucky breakdown if = 0.
+            V(:,kp1pos) = V(:,kp1pos) / H(k,1);
+            Q(:,kp1pos) = Q(:,kp1pos) / H(k,1);
         end
 
         % Apply previous (symmetric) Givens rotations.
@@ -233,8 +233,8 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         % Indices for H:
         % (k+1,k) --> (k+1,2+k-(k+1)) = (k+1,1)
         % (k,k)   --> (k,2+k-k) = (k,2)
-        [c(rotpos), s(rotpos), H(k,2)] = SymGivens(H(k,2), H(k+1,1));
-        H(k+1,1) = 0;
+        [c(rotpos), s(rotpos), H(k,2)] = SymGivens(H(k,2), H(k,1));
+        H(k,1) = 0;
         g(kp1pos) = s(rotpos) * g(kpos);
         g(kpos)   = c(rotpos) * g(kpos);
 
