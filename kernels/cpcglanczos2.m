@@ -6,21 +6,16 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % Constraint-preconditioned Lanczos version of CG (CGLanczos) for
 % regularized saddle-point systems.
 %
-%======================================================================
-% Last update, August 24, 2018.
-% Daniela di Serafino, daniela.diserafino@unicampania.it.
-% Dominique Orban, dominique.orban@gerad.ca.
-%
-%======================================================================
 % This function solves the regularized saddle-point system
 %
 %  [ A   B' ] [x] = [b]
 %  [ B  -C  ] [y]   [0],
 %
-% where A is n x n, B is m x n, C is m x m, with m <= n, and A and C
-% are symmetric. The system must also satisfy the following condition:
+% where A is n x n, B is m x n, C is m x m, and A and C are symmetric.
+% The system must also be second-order sufficient, i.e., it must satisfy
+% the following condition:
 %
-% let C = EDE' be a decomposition of C with D nonsingular;
+% Let C = EDE' be a decomposition of C with D nonsingular;
 % the block-diagonal matrix blkdiag(A, inv(D)) must be positive
 % definite on the nullspace of [B E].
 %
@@ -30,28 +25,26 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %  [ B  -C  ],
 %
 % where G is a symmetric approximation to A, and must be chosen so that
-% blkdiag(G, inv(D)) is positive definite on the nullspace of [B E].
+% the preconditioner is second-order sufficient, i.e., blkdiag(G, inv(D))
+% is positive definite on the nullspace of [B E].
 %
-% The iterations stop when
+% The iterations stop when one of the following conditions is satisfied:
 %
-%   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (k = itmax),
+%   |r| <= atol + rtol * |r0|,  or
+%   |r| <= btol * (|A| * |x| + |b|), or
+%   k == itmax,
 %
-% where residNorm and residNorm0 are the 2-norms of the current and
-% initial residuals, atol and rtol are absolute and relative tolerances,
+% where |r| and |r0| are the 2-norm of the current and initial residuals
+% (r = b - Ax), atol and rtol are absolute and relative tolerances,
+% btol is a relative tolerance used to stop based on a measure of the
+% backward error, |A| and |x| are estimated along the iterations,
 % k is the iteration index, and itmax is the maximum number of iterations.
 %
-% NOTE that
-% - the argument A may be a matrix or a linear operator, but C and G
-%   must be explicit matrices;
-% - B is not explicitly passed to cpcglanczos as an argument, but it
-%   has been used to form the constraint preconditioner stored
-%   in M (see reg_cpkrylov.m);
-% - M must be an operator such that M*z returns the solution of
+% NOTE that B is not explicitly passed to cpcglanczos as an argument, but it
+% has been used to form the constraint preconditioner stored in M
+% (see reg_cpkrylov.m).
 %
-%  [ G   B' ] [r] = [z1]
-%  [ B  -C  ] [u]   [z2].
-%
-% The linear operatos are defined using the Spot Toolbox by Ewout van
+% Linear operators are defined using the Spot Toolbox by Ewout van
 % den Berg and Michael P. Friedlander.
 % See http://www.cs.ubc.ca/labs/scl/spot.
 %
@@ -65,17 +58,19 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %======================================================================
 % INPUT ARGUMENTS
 % b:     n-vector, the vector b in the rhs of the saddle-point system;
-% A:     n x n matrix or linear operator, (1,1) block of the saddle-
-%        point matrix;
-% C:     m x m matrix (m <= n), -C is the (2,2) block of the saddle-point
-%        matrix;
-% M:     operator, the action of the constraint preconditioner on a
-%        vector;
+% A:     n x n matrix or linear operator;
+% C:     m x m matrix or linear operator;
+% M:     matrix or operator materializing the action of the constraint
+%        preconditioner on a vector, i.e., M*z returns the solution of
+%          [ G   B' ] u = z;
+%          [ B  -C  ]
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
 %        atol  - absolute tolerance for CP-CGLanczos stopping criterion
 %                [default 1e-6],
 %        rtol  - relative tolerance for CP-CGLanczos stopping criterion
+%                [default 1e-6],
+%        btol  - relative tolerance used in backward error stopping criterion
 %                [default 1e-6],
 %        itmax - maximum number of CP-CGLanczos iterations [default n],
 %        print - display info about CP-CGLanczos iterations [default true].
@@ -89,14 +84,6 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % flag:  struct variable with the following fields (for now):
 %        solved - true if residNorm <= stopTol, false otherwise (itmax
 %                 attained).
-%======================================================================
-
-
-%======================================================================
-% NOTE
-%   cpcglanczos2 differs from cpcglanczos because it stops by checking
-%   a normwise backward error estimate instead of the relative residual
-%   norm. The choice between the two criteria should be implemented.
 %======================================================================
 
     % Set problem sizes and optional arguments.
