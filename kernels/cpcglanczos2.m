@@ -151,8 +151,9 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     qkp1  = - vprec(n+1:n+m); % q1   = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
-        errmsg = 'Iter 0: preconditioner does not behave as a spd matrix.';
-        error(errmsg);
+        exc = MException('CPCGLanczos:IndefiniteError', ...
+                         sprintf('preconditioner not second-order sufficient at iteration 0'));
+        throw(exc);
     end
     if beta ~= 0
         % Normalize Lanczos vectors v1 and q1.
@@ -222,11 +223,13 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         qkp1 = qk - vprec(n+1:n+m);
         qkp1 = qkp1 - alpha*qk - beta*qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
+
         if beta < 0
-            itstr = num2str(k);
-            errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
-            error(errmsg);
+            exc = MException('CPCGLanczos:IndefiniteError', ...
+                             sprintf('preconditioner not second-order sufficient at iteration %d', k));
+            throw(exc);
         end
+
         if beta ~= 0
             beta = sqrt(beta);
             vkp1 = vkp1/beta;
