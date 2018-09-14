@@ -104,6 +104,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
+    btol = 1.0e-6;
     itmax = n;
     display_info = true;
 
@@ -113,6 +114,9 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         end
         if isfield(opts, 'rtol')
             rtol = opts.rtol;
+        end
+        if isfield(opts, 'btol')
+            btol = opts.btol;
         end
         if isfield(opts, 'itmax')
             itmax = opts.itmax;
@@ -178,16 +182,11 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     tau = 0;
     delta = 0;
 
-    % Set tolerance.
-    % TODO:
-    % ADD OPTION TO CHOOSE BETWEEN STOPPING CRITERIA (RELATIVE RESIDUAL NORM
-    % AND BACKWARD ERROR) AND MODIFY THIS SECTION OF CODE ACCORDINGLY
-
-    % Stopping criterion based only on residual
-    % stopTol = atol + rtol * residNorm;
+    % Stopping criterion based on residual
+    stopTol = atol + rtol * residNorm;
 
     % Backward error stopping criterion
-    stopTol = rtol * beta1;
+    bstopTol = btol * beta1;
 
     % Print initial iteration and residual norm (if required).
     if display_info
@@ -198,7 +197,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     end
 
     % Main loop.
-    while residNorm > stopTol && k < itmax
+    while residNorm > stopTol && residNorm > bstopTol && k < itmax
 
         k = k + 1;
 
@@ -254,8 +253,6 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         delta = sn;
         rhobar = -cs;
 
-        % fprintf('%10.4e  %10.4e  %10.4e\n', xnorm, norm(x), norm([x ; y]))
-
         % Estimate norm(A)
         Anorm2 = Anorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
         Anorm  = sqrt(Anorm2);
@@ -264,13 +261,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         residHistory = [residHistory; residNorm];
         oldbeta = beta;
 
-        % TODO: UPDATE STOPTOL ONLY IF BACKWARD ERROR STOPPING CRITERION IS USED
-        stopTol = rtol * (Anorm * xnorm + beta1);
+        bstopTol = btol * (Anorm * xnorm + beta1);
 
         % Print current iteration and residual norm (if required).
         if display_info
             info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
-            fprintf(info_fmt, k, residNorm, matnorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
+            fprintf(info_fmt, k, residNorm, Anorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
         end
 
     end
