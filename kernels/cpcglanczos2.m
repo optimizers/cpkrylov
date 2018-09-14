@@ -130,13 +130,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     % v0 and q0.
     x = zeron;
     y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk
-    u = b;                    % u0 = b - A * x0 = b
-    t = zerom;                % t0 =     C * q0 = 0
+    u = b;                    % u0 = b - A*x0 = b
+    t = zerom;                % t0 = C * q0 = 0
     vk = zeron;
     qk = zerom;
-    
-    betaold = 0;              % used to estimate the matrix norm
-    matnorm2 = 0;             % initialize estimate of matrix norm
+    oldbeta = 0;              % used to estimate the norm of A
+    Anorm2 = 0;               % estimate of the norm of A
 
     if display_info
         fprintf('\n**** Constraint-preconditioned version of CP-CGLanczos ****\n\n');
@@ -159,29 +158,34 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     end
     wv = vkp1;
     wq = qkp1;
-    residNorm = beta;
+    beta1 = beta;
+    residNorm = beta1;
     residHistory = [residNorm];
-    
+
     % For backward error stopping criterion
     beta1 = beta;
 
     % Misc. initializations.
     k    = 0;                 % iteration index
     dg   = 0;                 % d0
-    tau  = 0;                 % tau0
-    delta = 0;                % delta0
-    xnormacc = 0;             % xanormacc0
     low  = 1;                 % l1
     eta  = beta;              % eta1
-    rhobar = 1;               % rhobar1
-    
+
+    % Quantities related to norm(x)
+    rhobar = 1;
+    xxnorm2 = 0;
+    xnorm = 0;
+    tau = 0;
+    delta = 0;
+
     % Set tolerance.
+    % TODO:
     % ADD OPTION TO CHOOSE BETWEEN STOPPING CRITERIA (RELATIVE RESIDUAL NORM
     % AND BACKWARD ERROR) AND MODIFY THIS SECTION OF CODE ACCORDINGLY
-    
+
     % Stopping criterion based only on residual
     % stopTol = atol + rtol * residNorm;
-    
+
     % Backward error stopping criterion
     stopTol = rtol * beta1;
 
@@ -212,7 +216,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         zeta = eta/dg;                    % zetak
         x = x + zeta * wv;
         y = y - zeta * wq;                % qk = qk-1 + zetak*wqk, yk = y0-qk = -qk
-    
+
         % Compute next Lanczos vectors and update residual norm.
         vprec = M * [u; -t];
         vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
@@ -235,30 +239,33 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         eta = -low * eta;                    % etak+1
         wv = vkp1 - low*wv;                  % wvk+1
         wq = qkp1 - low*wq;                  % wqk+1
-        
-        % Compute data for 2-norm of [x; y]
-        rho = sqrt(rhobar*rhobar + low*low); % rhok
-        c = rhobar/rho;                      % ck
-        s = low/rho;                         % sk
-        tau = zeta - delta*tau;              % num of tauk and taubark
-        taubar = tau/rhobar;                 % taubark
-        tau = tau/rho;                       % tauk
-        delta = s;                           % deltak+1
-        rhobar = -c;                         % rhobark+1
-    
-        % Estimate Frobenius norm of preconditioned matrix and compute
-        % 2-norm of [x; y]
-        matnorm2 = matnorm2 + alpha * alpha + beta * beta + betaold * betaold;
-        xnorm2 = xnormacc + taubar*taubar;
-        xnormacc = xnormacc + tau*tau;
-        xnorm = sqrt(xnorm2);
-        matnorm = sqrt(matnorm2);
-        betaold = beta;
-        
-        % Compute residual norm
+
+        % Compute norm(x)
+        rho = sqrt(rhobar * rhobar + low * low);
+        cs = rhobar / rho;
+        sn = low / rho;
+
+        num = zeta - delta * tau;
+        taubar = num / rhobar;
+        tau = num / rho;
+
+        xnorm = sqrt(xxnorm2 + taubar * taubar);
+        xxnorm2 = xxnorm2 + tau * tau;       % for the next iteration
+        delta = sn;
+        rhobar = -cs;
+
+        % fprintf('%10.4e  %10.4e  %10.4e\n', xnorm, norm(x), norm([x ; y]))
+
+        % Estimate norm(A)
+        Anorm2 = Anorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
+        Anorm  = sqrt(Anorm2);
+
         residNorm = beta * abs(zeta);
         residHistory = [residHistory; residNorm];
+        oldbeta = beta;
 
+        % TODO: UPDATE STOPTOL ONLY IF BACKWARD ERROR STOPPING CRITERION IS USED
+        stopTol = rtol * (Anorm * xnorm + beta1);
 
         % Print current iteration and residual norm (if required).
         if display_info
@@ -266,10 +273,6 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             fprintf(info_fmt, k, residNorm, matnorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
         end
 
-        % TO BE MODIFIED: UPDATE STOPTOL ONLY IF BACKWARD ERROR STOPPING
-        % CRITERION IS USED
-        stopTol = rtol * (matnorm * xnorm + beta1);
-        
     end
 
     if display_info
@@ -282,4 +285,3 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     flag.solved = (residNorm <= stopTol);
 
 end
-
