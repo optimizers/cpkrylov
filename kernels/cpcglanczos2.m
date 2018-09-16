@@ -30,9 +30,9 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %
 % The iterations stop when one of the following conditions is satisfied:
 %
-%   |r| <= atol + rtol * |r0|,  or
-%   |r| <= btol * (|A| * |x| + |b|), or
-%   k == itmax,
+%  1. |r| <= stopTol  = atol + rtol * |r0|,  or
+%  2. |r| <= bstopTol = btol * (|A| * |x| + |b|), or
+%  3. k == itmax,
 %
 % where |r| and |r0| are the 2-norm of the current and initial residuals
 % (r = b - Ax), atol and rtol are absolute and relative tolerances,
@@ -66,12 +66,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %          [ B  -C  ]
 % opts:  [optional] struct variable with the following (possible)
 %        fields:
-%        atol  - absolute tolerance for CP-CGLanczos stopping criterion
+%        atol  - absolute tolerance for stopping criterion 1
 %                [default 1e-6],
-%        rtol  - relative tolerance for CP-CGLanczos stopping criterion
+%        rtol  - relative tolerance for stopping criterion 1
 %                [default 1e-6],
-%        btol  - relative tolerance used in backward error stopping criterion
-%                [default 1e-6],
+%        btol  - relative tolerance used in stopping criterion 2
+%                (backward error) [default 1e-6],
 %        itmax - maximum number of CP-CGLanczos iterations [default n],
 %        print - display info about CP-CGLanczos iterations [default true].
 %
@@ -80,10 +80,15 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % y:     m-vector, last m entries of the solution;
 % stats: struct variable with the following fields:
 %        niters - number of CP-CGLanczos iterations performed,
-%        residHistory - history of 2-norm of residuals;
-% flag:  struct variable with the following fields (for now):
-%        solved - true if residNorm <= stopTol, false otherwise (itmax
-%                 attained).
+%        residHistory - (niters+1)-vector, history of 2-norm of
+%                 residuals,
+%        status - string, reason why the algorithm stopped, i.e.
+%                 'residual small compared to initial residual', or
+%                 'backward error small', or
+%                 'maximum number of iterations';
+% flag:  struct variable with the following fields:
+%        solved - true if |r| <= stopTol, or |r| <= bstopTol,
+%                 false otherwise (itmax attained).
 %======================================================================
 
     % Set problem sizes and optional arguments.
@@ -178,6 +183,9 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
     % Print initial iteration and residual norm (if required).
     if display_info
+        %===================================================
+        % TO BE MODIFIED TO TAKE INTO ACCOUNT BACKWARD ERROR
+        %===================================================
         header_fmt = '%5s  %9s\n';
         info_fmt = '%5d  %9.2e\n';
         fprintf(header_fmt, 'iter', '|resid|');
@@ -255,8 +263,11 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
         % Print current iteration and residual norm (if required).
         if display_info
+            %===================
+            % TO BE MODIFIED
+            %===================
             info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
-            fprintf(info_fmt, k, residNorm, Anorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
+            fprintf(info_fmt, k, residNorm, Anorm * xnorm + beta1, xnorm, norm([x; y]));
         end
 
     end
@@ -269,7 +280,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     stats.niters = k;
     stats.residHistory = residHistory;
     flag.solved = false;
-    stats.status = 'maximum number of iterations';
+    stats.status = 'maximum number of iterations achieved';
     if residNorm <= stopTol
         flags.solved = true;
         stats.status = 'residual small compared to initial residual';
