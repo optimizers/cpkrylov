@@ -1,4 +1,4 @@
-function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
+function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 
 %======================================================================
 % [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
@@ -46,7 +46,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % backward error, |op| and |x| are estimated along the iterations,
 % k is the iteration index, and itmax is the maximum number of iterations.
 %
-% By default, btol = 0, i.e., only stopping conditions 1 and 3 are used. 
+% By default, btol = 0, i.e., only stopping conditions 1 and 3 are used.
 %
 % NOTE that B is not explicitly passed to cpcglanczos as an argument, but it
 % will have been used to form the constraint preconditioner stored in M
