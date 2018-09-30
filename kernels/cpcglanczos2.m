@@ -28,20 +28,26 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % the preconditioner is second-order sufficient, i.e., blkdiag(G, inv(D))
 % is positive definite on the nullspace of [B E].
 %
+% The contraint-preconditioned CG iterations are the same, in exact
+% arithmetic, as the standard CG iterations on a reduced system.
+% Below, the operator of that reduced system is denoted `op`. It can be
+% viewed as the restriction of blkdiag(A, inv(D)) to the nullspace of
+% [B E].
+%
 % The iterations stop when one of the following conditions is satisfied:
 %
 %  1. |r| <= stopTol  = atol + rtol * |r0|,  or
-%  2. |r| <= bstopTol = btol * (|A| * |x| + |b|), or
+%  2. |r| <= bstopTol = btol * (|op| * |x| + |b|), or
 %  3. k == itmax,
 %
-% where |r| and |r0| are the 2-norm of the current and initial residuals
-% (r = b - Ax), atol and rtol are absolute and relative tolerances,
+% where |r| and |r0| are the 2-norm of the current and initial residuals,
+% atol and rtol are absolute and relative tolerances,
 % btol is a relative tolerance used to stop based on a measure of the
-% backward error, |A| and |x| are estimated along the iterations,
+% backward error, |op| and |x| are estimated along the iterations,
 % k is the iteration index, and itmax is the maximum number of iterations.
 %
 % NOTE that B is not explicitly passed to cpcglanczos as an argument, but it
-% has been used to form the constraint preconditioner stored in M
+% will have been used to form the constraint preconditioner stored in M
 % (see reg_cpkrylov.m).
 %
 % Linear operators are defined using the Spot Toolbox by Ewout van
@@ -130,8 +136,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     t = zerom;                % t0 = C * q0 = 0
     vk = zeron;
     qk = zerom;
-    oldbeta = 0;              % used to estimate the norm of A
-    Anorm2 = 0;               % estimate of the norm of A
+    oldbeta = 0;              % used to estimate the norm of the reduced operator
+    opNorm2 = 0;              % estimate of the norm of the reduced operator
 
     if display_info
         fprintf('\n**** Constraint-preconditioned version of CP-CGLanczos ****\n\n');
@@ -206,7 +212,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         % Update x and y.
         u = A * vk;
         t = C * qk;
-        alpha = dot(u, vk) + dot(t, qk);  % STOP if alpha <= 0 ?
+        alpha = dot(u, vk) + dot(t, qk);
+
         dg = alpha - low*low * dg;        % dk
         zeta = eta/dg;                    % zetak
         x = x + zeta * wv;
@@ -237,29 +244,31 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         wv = vkp1 - low*wv;                  % wvk+1
         wq = qkp1 - low*wq;                  % wqk+1
 
-        % Compute norm(x)
-        rho = sqrt(rhobar * rhobar + low * low);
-        cs = rhobar / rho;
-        sn = low / rho;
+        % Compute norm(x) if using backward error stopping condition
+        if btol > 0
+            rho = sqrt(rhobar * rhobar + low * low);
+            cs = rhobar / rho;
+            sn = low / rho;
 
-        num = zeta - delta * tau;
-        taubar = num / rhobar;
-        tau = num / rho;
+            num = zeta - delta * tau;
+            taubar = num / rhobar;
+            tau = num / rho;
 
-        xnorm = sqrt(xxnorm2 + taubar * taubar);
-        xxnorm2 = xxnorm2 + tau * tau;       % for the next iteration
-        delta = sn;
-        rhobar = -cs;
+            xnorm = sqrt(xxnorm2 + taubar * taubar);
+            xxnorm2 = xxnorm2 + tau * tau;       % for the next iteration
+            delta = sn;
+            rhobar = -cs;
 
-        % Estimate norm(A)
-        Anorm2 = Anorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
-        Anorm  = sqrt(Anorm2);
+            % Estimate norm of reduced operator
+            opNorm2 = opNorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
+            opNorm  = sqrt(opNorm2);
+
+            bstopTol = btol * (opNorm * xnorm + beta1);
+        end
 
         residNorm = beta * abs(zeta);
         residHistory = [residHistory; residNorm];
         oldbeta = beta;
-
-        bstopTol = btol * (Anorm * xnorm + beta1);
 
         % Print current iteration and residual norm (if required).
         if display_info
@@ -267,7 +276,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             % TO BE MODIFIED
             %===================
             info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
-            fprintf(info_fmt, k, residNorm, Anorm * xnorm + beta1, xnorm, norm([x; y]));
+            fprintf(info_fmt, k, residNorm, opNorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
         end
 
     end
