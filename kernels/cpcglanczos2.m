@@ -189,13 +189,21 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
     % Print initial iteration and residual norm (if required).
     if display_info
-        %===================================================
-        % TO BE MODIFIED TO TAKE INTO ACCOUNT BACKWARD ERROR
-        %===================================================
-        header_fmt = '%5s  %9s\n';
-        info_fmt = '%5d  %9.2e\n';
+        header_fmt = '%5s  %9s';
+        info_fmt = '%5d  %9.2e';
         fprintf(header_fmt, 'iter', '|resid|');
+        if btol > 0
+            % make room to print backward error, operator norm and iterate norm
+            header_fmt2 = '  %9s  %9s  %9s';
+            fprintf(header_fmt2, 'bkerr', '|op|', '|x|');
+        end
+        fprintf('\n');
         fprintf(info_fmt, k, residNorm);
+        if btol > 0
+            info_fmt2 = '  %9.2e  %9.2e';
+            fprintf(info_fmt2, 0, 0, xNorm);
+        end
+        fprintf('\n');
     end
 
     % Main loop.
@@ -263,7 +271,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             opNorm2 = opNorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
             opNorm  = sqrt(opNorm2);
 
-            bstopTol = btol * (opNorm * xnorm + beta1);
+            bkerr = opNorm * xNorm + beta1;
+            bstopTol = btol * bkerr;
         end
 
         residNorm = beta * abs(zeta);
@@ -272,13 +281,12 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
         % Print current iteration and residual norm (if required).
         if display_info
-            %===================
-            % TO BE MODIFIED
-            %===================
-            info_fmt = '%5d  %9.2e  %9.2e  %16.8e  %16.8e\n';
-            fprintf(info_fmt, k, residNorm, opNorm * xnorm + beta1, xnorm, norm([x; y])); % TO BE MODIFIED
+            fprintf(info_fmt, k, residNorm);
+            if btol > 0
+                fprintf(info_fmt2, residNorm / bkerr, opNorm, xNorm);
+            end
+            fprintf('\n');
         end
-
     end
 
     if display_info
