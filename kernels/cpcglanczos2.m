@@ -46,6 +46,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 % backward error, |op| and |x| are estimated along the iterations,
 % k is the iteration index, and itmax is the maximum number of iterations.
 %
+% By default, btol = 0, i.e., only stopping conditions 1 and 3 are used. 
+%
 % NOTE that B is not explicitly passed to cpcglanczos as an argument, but it
 % will have been used to form the constraint preconditioner stored in M
 % (see reg_cpkrylov.m).
@@ -77,7 +79,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %        rtol  - relative tolerance for stopping criterion 1
 %                [default 1e-6],
 %        btol  - relative tolerance used in stopping criterion 2
-%                (backward error) [default 1e-6],
+%                (backward error) [default 0],
 %        itmax - maximum number of CP-CGLanczos iterations [default n],
 %        print - display info about CP-CGLanczos iterations [default true].
 %
@@ -102,7 +104,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     m = size(C, 1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    btol = 1.0e-6;
+    btol = 0.0;
     itmax = n;
     display_info = true;
 
@@ -165,7 +167,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     residNorm = beta1;
     residHistory = [residNorm];
 
-    % For backward error stopping criterion
+    % For backward error stopping criterion.
     beta1 = beta;
 
     % Misc. initializations.
@@ -174,17 +176,17 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     low  = 1;                 % l1
     eta  = beta;              % eta1
 
-    % Quantities related to norm(x)
+    % Quantities related to norm(x).
     rhobar = 1;
     xxNorm2 = 0;
     xNorm = 0;
     tau = 0;
     delta = 0;
 
-    % Stopping criterion based on residual
+    % Stopping criterion based on residual.
     stopTol = atol + rtol * residNorm;
 
-    % Backward error stopping criterion
+    % Backward error stopping criterion.
     bstopTol = btol * beta1;
 
     % Print initial iteration and residual norm (if required).
@@ -246,13 +248,13 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             qkp1 = qkp1 / beta;
         end
 
-        % Compute data for next updates of x and y
+        % Compute data for next updates of x and y.
         low = beta / dg;                     % lk+1
         eta = -low * eta;                    % etak+1
         wv = vkp1 - low * wv;                % wvk+1
         wq = qkp1 - low * wq;                % wqk+1
 
-        % Compute norm(x) if using backward error stopping condition
+        % Compute norm(x) if using backward error stopping condition.
         if btol > 0
             rho = sqrt(rhobar * rhobar + low * low);
             cs = rhobar / rho;
@@ -267,7 +269,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             delta = sn;
             rhobar = -cs;
 
-            % Estimate norm of reduced operator
+            % Estimate norm of reduced operator.
             opNorm2 = opNorm2 + alpha * alpha + beta * beta + oldbeta * oldbeta;
             opNorm  = sqrt(opNorm2);
 
