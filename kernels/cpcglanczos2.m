@@ -98,8 +98,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 %======================================================================
 
     % Set problem sizes and optional arguments.
-    n = size(A,1);
-    m = size(C,1);
+    n = size(A, 1);
+    m = size(C, 1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
     btol = 1.0e-6;
@@ -125,8 +125,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     end
 
     % Set up zero vectors.
-    zeron = zeros(n,1);
-    zerom = zeros(m,1);
+    zeron = zeros(n, 1);
+    zerom = zeros(m, 1);
 
     % Initialize some vectors, including (fake) Lanczos vectors.
     % v0 and q0.
@@ -156,8 +156,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     if beta ~= 0
         % Normalize Lanczos vectors v1 and q1.
         beta = sqrt(beta);
-        vkp1 = vkp1/beta;
-        qkp1 = qkp1/beta;
+        vkp1 = vkp1 / beta;
+        qkp1 = qkp1 / beta;
     end
     wv = vkp1;
     wq = qkp1;
@@ -176,8 +176,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
     % Quantities related to norm(x)
     rhobar = 1;
-    xxnorm2 = 0;
-    xnorm = 0;
+    xxNorm2 = 0;
+    xNorm = 0;
     tau = 0;
     delta = 0;
 
@@ -214,16 +214,16 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
         t = C * qk;
         alpha = dot(u, vk) + dot(t, qk);
 
-        dg = alpha - low*low * dg;        % dk
-        zeta = eta/dg;                    % zetak
+        dg = alpha - low * low * dg;      % dk
+        zeta = eta / dg;                  % zetak
         x = x + zeta * wv;
         y = y - zeta * wq;                % qk = qk-1 + zetak*wqk, yk = y0-qk = -qk
 
         % Compute next Lanczos vectors and update residual norm.
         vprec = M * [u; -t];
-        vkp1 = vprec(1:n) - alpha*vk - beta*vkm1;
+        vkp1 = vprec(1:n) - alpha * vk - beta * vkm1;
         qkp1 = qk - vprec(n+1:n+m);
-        qkp1 = qkp1 - alpha*qk - beta*qkm1;
+        qkp1 = qkp1 - alpha * qk - beta * qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
 
         if beta < 0
@@ -234,15 +234,15 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
 
         if beta ~= 0
             beta = sqrt(beta);
-            vkp1 = vkp1/beta;
-            qkp1 = qkp1/beta;
+            vkp1 = vkp1 / beta;
+            qkp1 = qkp1 / beta;
         end
 
         % Compute data for next updates of x and y
         low = beta / dg;                     % lk+1
         eta = -low * eta;                    % etak+1
-        wv = vkp1 - low*wv;                  % wvk+1
-        wq = qkp1 - low*wq;                  % wqk+1
+        wv = vkp1 - low * wv;                % wvk+1
+        wq = qkp1 - low * wq;                % wqk+1
 
         % Compute norm(x) if using backward error stopping condition
         if btol > 0
@@ -254,8 +254,8 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
             taubar = num / rhobar;
             tau = num / rho;
 
-            xnorm = sqrt(xxnorm2 + taubar * taubar);
-            xxnorm2 = xxnorm2 + tau * tau;       % for the next iteration
+            xNorm = sqrt(xxNorm2 + taubar * taubar);
+            xxNorm2 = xxNorm2 + tau * tau;       % for the next iteration
             delta = sn;
             rhobar = -cs;
 
@@ -289,7 +289,7 @@ function [x, y, stats, flag] = cpcglanczos2(b, A, C, M, opts)
     stats.niters = k;
     stats.residHistory = residHistory;
     flag.solved = false;
-    stats.status = 'maximum number of iterations achieved';
+    stats.status = 'maximum number of iterations attained';
     if residNorm <= stopTol
         flags.solved = true;
         stats.status = 'residual small compared to initial residual';
