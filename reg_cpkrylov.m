@@ -143,20 +143,37 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
         end
     end
 
-    % Shift linear system so rhs has the form [b ; 0] and then solve it
-    xy0 = M * [zeros(n,1); b(n+1:n+m)];
-    b1 = b(1:n) - A * xy0(1:n) - B' * xy0(n+1:n+m);
+    % Shift linear system so rhs has the form [b ; 0]
+    shift = false;
+    if b(n+1:n+m) ~= zeros(m,1)
+        shift = true;
+        xy0 = M * [zeros(n,1); b(n+1:n+m)];
+        b1 = b(1:n) - A * xy0(1:n) - B' * xy0(n+1:n+m);
+    else
+        b1 = b(1:n);
+    end
+    
+    % Solve linear system
     [dx, ~, stats, flag] = method(b1, A, C, M, opts);
 %     [dx, dy, stats, flag] = method(b1, A, C, M, opts);
 
     % Recover solution of initial system
-    x1 = xy0(1:n) + dx;
-    xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
-    x2 = xy0(n+1:n+m) + xy(n+1:n+m);
+    if shift
+        x1 = xy0(1:n) + dx;
+        xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
+        x2 = xy0(n+1:n+m) + xy(n+1:n+m);
+%         % ALTERNATIVE (requires dy in output from method)
+%         x2bis = xy0(n+1:n+m) + dy;
+    else
+        x1 = dx;
+        xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
+        x2 = xy(n+1:n+m);
+%         % ALTERNATIVE (requires dy in output from method)
+%         x2bis = dy;
+    end
     x  = [x1; x2];
     
-%     % TO  BE REMOVED (requires dy in output from method)
-%     x2bis = xy0(n+1:n+m) + dy;
+%     % TO  BE REMOVED
 %     diffx2 = norm(x2-x2bis)/norm(x2);
 %     fprintf('\nnorm(x2-x2bis)/norm(x2) = %9.2e\n',diffx2);
 
