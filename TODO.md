@@ -7,7 +7,7 @@
 - the `dy` coming out of the iterative solver results in an incorrect `y` if we update `y = y0 + dy` --- FIXED
 - CPMINRES --- DONE
 - CPSYMMLQ --- DONE
-- use `logging4matlab`
+- use `logging4matlab`?
 - write a simple example program
-- write path_setup.m (for spot and cpkrylov only)
 - write README for github
+- which licence?
