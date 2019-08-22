@@ -7,7 +7,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
 % systems.
 %
 %======================================================================
-% Last update, August 28, 2018.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %

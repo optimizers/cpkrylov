@@ -78,7 +78,9 @@ classdef opLDL2 < opSpot
          op = op@opSpot('LDL2', n, n);
          op.cflag        = ~isreal(A);
          op.A            = [A  B' ; B  C];
-         [op.L, op.D, P] = ldl(op.A);
+         [L, D, P] = ldl(op.A);
+         op.L = opMatrix(L);
+         op.D = opMatrix(D);
          op.P            = opMatrix(P);
          op.LDL = op.P * inv(op.L') * inv(op.D) * inv(op.L) * op.P';
          op.sweepflag    = true;

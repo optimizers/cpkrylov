@@ -7,7 +7,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 % saddle-point systems.
 %
 %======================================================================
-% Last update, November 20, 2017.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -108,7 +108,9 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 % x:     (n+m)-vector, computed solution;
 % stats: struct variable with the following fields:
 %        niters - number of iterations performed by the Krylov solver,
-%        residHistory - history of 2-norm of residuals;
+%        residHistory - history of 2-norm of residuals,
+%        ptime - time for building the preconditioner,
+%        stime - time for solving the preconditioned system;
 % flag:  struct variable with the following fields (for now):
 %        solved - true if the residual norm satisfies the stopping
 %                 condition (see the doc in `method`), false otherwise
@@ -123,9 +125,11 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     end
     
     % Set up coefficient matrix and constraint preconditioner.
+    tstartp = tic;
     n = size(A,1);
     m = size(B,1);
     M = opLDL2(G, B, -C);
+    ptime = toc(tstartp);
 
     % Check optional arguments.
     if nargin > 6
@@ -143,6 +147,8 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
         end
     end
 
+    tstarts = tic;
+    
     % Shift linear system so rhs has the form [b ; 0]
     shift = false;
     if b(n+1:n+m) ~= zeros(m,1)
@@ -154,24 +160,27 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     end
     
     % Solve linear system
-    [dx, ~, stats, flag] = method(b1, A, C, M, opts);
-%     [dx, dy, stats, flag] = method(b1, A, C, M, opts);
+%     [dx, ~, stats, flag] = method(b1, A, C, M, opts);
+    [dx, dy, stats, flag] = method(b1, A, C, M, opts);
 
     % Recover solution of initial system
     if shift
         x1 = xy0(1:n) + dx;
         xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
-        x2 = xy0(n+1:n+m) + xy(n+1:n+m);
-%         % ALTERNATIVE (requires dy in output from method)
-%         x2bis = xy0(n+1:n+m) + dy;
+%         x2 = xy0(n+1:n+m) + xy(n+1:n+m);
+        x2 = xy0(n+1:n+m) + dy;
     else
         x1 = dx;
         xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
-        x2 = xy(n+1:n+m);
-%         % ALTERNATIVE (requires dy in output from method)
-%         x2bis = dy;
+%         x2 = xy(n+1:n+m);
+        x2 = dy;
     end
     x  = [x1; x2];
+    
+    stime = toc(tstarts);
+    
+    stats.ptime = ptime;
+    stats.stime = stime;
     
 %     % TO  BE REMOVED
 %     diffx2 = norm(x2-x2bis)/norm(x2);

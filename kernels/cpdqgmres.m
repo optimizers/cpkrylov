@@ -7,7 +7,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 % systems.
 %
 %======================================================================
-% Last update, November 20, 2017.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -85,7 +85,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 %                [default 1e-6],
 %        rtol  - relative tolerance for CP-DQGMRES stopping criterion
 %                [default 1e-6],
-%        mem   - memory in CP-DQGMRES [default 10];
+%        mem   - memory in CP-DQGMRES [default 50];
 %        itmax - maximum number of CP-DQGMRES iterations [default n+m],
 %        print - display info about CP-DQGMRES iterations [default true].
 %
@@ -106,8 +106,8 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    itmax = n+m;          % which value?????
-    mem = 20;
+    itmax = n+m;
+    mem = 50;
     display_info = true;
 
     if nargin > 4
@@ -138,18 +138,18 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     c  = zeros(mem, 1);         % Givens cosines.
     s  = zeros(mem, 1);         % Givens sines.
     H  = zeros(itmax, mem+2);   % Upper Hessenberg form of A, with mem upper
-                                % diagonals. Its mem+2 diagonals are stored  
+                                % diagonals. Its mem+2 diagonals are stored
                                 % as column vectors, according to the tranformation
                                 % (j,k) --> (j,2+k-j). ALL THIS MEMORY IS
                                 % NOT NEEDED. TODO: REDUCE MEMORY FOR H.
-                               
+
     % Set up zero vectors
     zeron = zeros(n,1);
     zerom = zeros(m,1);
 
     % Initialize some vectors
     x = zeron;
-    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk 
+    y = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk
     u = b;                    % u_0 = b - A * x_0 = b
     t = zerom;                % t_0 =     C * q_0 = 0
 
@@ -179,11 +179,11 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     end
 
     % Main loop.
-    
+
     % The following stopping criterion compensates for the lag in the
-    % residual, but usually increases the number of iterations. 
+    % residual, but usually increases the number of iterations.
     % while sqrt(max(1, k-mem+1)) * residNorm > stopTol && k < itmax
-    
+
     while residNorm > stopTol && k < itmax  % less accurate, but acceptable
 
         k = k + 1;
@@ -191,6 +191,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         % Set position in circular stack where (k+1)-st Krylov vector should go.
         kpos = mod(k-1, mem+1) + 1;  % Position corresponding to k in the circular stack.
         kp1pos = mod(k, mem+1) + 1;  % Position corresponding to k+1 in the circular stack.
+        rotpos = mod(k-1, mem) + 1;  % Position of the current rotation parameters
 
         % Compute next Krylov vectors from the modified Gram-Schmidt process.
         % Only orthogonalize against the most recent min(k,mem) vectors.
@@ -201,40 +202,41 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         Q(:,kp1pos) = Q(:,kpos) - w(n+1:n+m,1);
         for j = max(1, k-mem+1) : k
             jpos = mod(j-1, mem+1) + 1;
-            kk = 2+k-j; 
+            kk = 2+k-j;
             H(j,kk) = dot(V(:,jpos), u) + dot(Q(:,jpos), t);
             V(:,kp1pos) = V(:,kp1pos) - H(j,kk) * V(:,jpos);
             Q(:,kp1pos) = Q(:,kp1pos) - H(j,kk) * Q(:,jpos);
         end
         % kk = k-(k+1)+2 = 1
-        H(k+1,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
+        H(k,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
 
-        if H(k+1,1) ~= 0     % Lucky breakdown if = 0.
-            V(:,kp1pos) = V(:,kp1pos) / H(k+1,1);
-            Q(:,kp1pos) = Q(:,kp1pos) / H(k+1,1);
+        if H(k,1) ~= 0     % Lucky breakdown if = 0.
+            V(:,kp1pos) = V(:,kp1pos) / H(k,1);
+            Q(:,kp1pos) = Q(:,kp1pos) / H(k,1);
         end
 
         % Apply previous (symmetric) Givens rotations.
         for j = max(1,k-mem) : k-1
             jpos = mod(j-1, mem+1) + 1;
             jp1pos = mod(j, mem+1) + 1;
+            jrotpos = mod(j-1, mem) + 1;
             kk  = k-j+1;       % kk  = 2+k-(j+1)
             kk1 = kk+1;        % kk1 = 2+k-j
-            Hjk = c(jpos) * H(j,kk1) + s(jpos) * H(j+1,kk);
-            H(j+1,kk) = s(jpos) * H(j,kk1) - c(jpos) * H(j+1,kk);
+            Hjk = c(jrotpos) * H(j,kk1) + s(jrotpos) * H(j+1,kk);
+            H(j+1,kk) = s(jrotpos) * H(j,kk1) - c(jrotpos) * H(j+1,kk);
             H(j,kk1) = Hjk;
         end
-        
+
         % Compute and apply current (symmetric) Givens rotation:
         % [ck  sk] [H(k,k)  ] = [*]
         % [sk -ck] [H(k+1,k)]   [0].
         % Indices for H:
         % (k+1,k) --> (k+1,2+k-(k+1)) = (k+1,1)
         % (k,k)   --> (k,2+k-k) = (k,2)
-        [c(kpos), s(kpos), H(k,2)] = SymGivens(H(k,2), H(k+1,1));
-        H(k+1,1) = 0;
-        g(kp1pos) = s(kpos) * g(kpos);
-        g(kpos)   = c(kpos) * g(kpos);
+        [c(rotpos), s(rotpos), H(k,2)] = SymGivens(H(k,2), H(k,1));
+        H(k,1) = 0;
+        g(kp1pos) = s(rotpos) * g(kpos);
+        g(kpos)   = c(rotpos) * g(kpos);
 
         % Update directions PV and PQ, and solution [x; y].
         PV(:,kpos) = V(:,kpos);

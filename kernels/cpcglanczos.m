@@ -6,6 +6,12 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 % Constraint-preconditioned Lanczos version of CG (CGLanczos) for
 % regularized saddle-point systems.
 %
+%======================================================================
+% Last update, August 21, 2019.
+% Daniela di Serafino, daniela.diserafino@unicampania.it.
+% Dominique Orban, dominique.orban@gerad.ca.
+%
+%======================================================================
 % This function solves the regularized saddle-point system
 %
 %  [ A   B' ] [x] = [b]

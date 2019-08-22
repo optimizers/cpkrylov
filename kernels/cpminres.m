@@ -7,7 +7,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 % systems.
 %
 %======================================================================
-% Last update, August 26, 2018.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -180,7 +180,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         vk = vkp1;
         qk = qkp1;
         
-        % Compute next Lanczos vectors and update residual norm.
+        % Compute next Lanczos vectors.
         u = A * vk;
         t = C * qk;
         alpha = dot(u, vk) + dot(t, qk);

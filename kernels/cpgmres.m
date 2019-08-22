@@ -7,7 +7,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 % systems.
 %
 %======================================================================
-% Last update, November 20, 2017.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
@@ -78,7 +78,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 %                  [default 1e-6],
 %        rtol    - relative tolerance for CP-GMRES stopping criterion
 %                  [default 1e-6],
-%        restart - restart parameter l of CP-GMRES(l) [default 30],
+%        restart - restart parameter l of CP-GMRES(l) [default 50],
 %        reorth  - partial reorthogonalization, true/false [default false],
 %        itmax   - maximum number of CP-GMRES iterations [default n+m],
 %        print   - display info about CP-GMRES iterations [default true].
@@ -100,8 +100,8 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
     m = size(C,1);
     atol = 1.0e-6;
     rtol = 1.0e-6;
-    restart = 100;   % 20;
-    % reorth = false;           % ????
+    restart = 50;
+    % reorth = false;
     itmax = n+m;
     display_info = true;
 
@@ -228,8 +228,6 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
-%             fprintf('\n\n K = %d -- H dopo apply previous rotations\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
             
             % Compute and apply current (symmetric) Givens rotation:
             % [ck  sk] [H(k,k)  ] = [*]
@@ -240,8 +238,6 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
             g(k)   = c(k) * g(k);
             residNorm = abs(g(k+1));
             residHistory = [residHistory; residNorm];
-%             fprintf('\n\n K = %d -- H after applying current rotation\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H'); 
 
             % Print current iteration and residual norm (if required).
             if display_info

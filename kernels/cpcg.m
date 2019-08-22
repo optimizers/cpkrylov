@@ -6,7 +6,7 @@ function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
 % Constraint-preconditioned CG for regularized saddle-point systems.
 %
 %======================================================================
-% Last update, November 20, 2017.
+% Last update, August 21, 2019.
 % Daniela di Serafino, daniela.diserafino@unicampania.it.
 % Dominique Orban, dominique.orban@gerad.ca.
 %
