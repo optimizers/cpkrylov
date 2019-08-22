@@ -9,4 +9,5 @@
 - CPSYMMLQ --- DONE
 - use `logging4matlab`
 - write a simple example program
+- write path_setup.m (for spot and cpkrylov only)
 - write README for github
