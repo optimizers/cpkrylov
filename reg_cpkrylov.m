@@ -160,19 +160,16 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     end
     
     % Solve linear system
-%     [dx, ~, stats, flag] = method(b1, A, C, M, opts);
     [dx, dy, stats, flag] = method(b1, A, C, M, opts);
 
     % Recover solution of initial system
     if shift
         x1 = xy0(1:n) + dx;
         xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
-%         x2 = xy0(n+1:n+m) + xy(n+1:n+m);
         x2 = xy0(n+1:n+m) + dy;
     else
         x1 = dx;
         xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
-%         x2 = xy(n+1:n+m);
         x2 = dy;
     end
     x  = [x1; x2];
@@ -181,9 +178,5 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     
     stats.ptime = ptime;
     stats.stime = stime;
-    
-%     % TO  BE REMOVED
-%     diffx2 = norm(x2-x2bis)/norm(x2);
-%     fprintf('\nnorm(x2-x2bis)/norm(x2) = %9.2e\n',diffx2);
 
 end
