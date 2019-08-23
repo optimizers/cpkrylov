@@ -90,7 +90,7 @@ fprintf('\nresidual_update = %d,  nitref = %d,  force_iref = %d,  itref_tol = %7
     opts.residual_update, opts.nitref, opts.force_itref, opts.itref_tol);
 
     
-% Call CP-MINRES
+% Call CP-Krylov solver
 ts = tic;
 [cpkx,  cpkstats, cpkflag] = reg_cpkrylov(cpk, rhs, Q, A, C, G, opts);
 ttot = toc(ts);
