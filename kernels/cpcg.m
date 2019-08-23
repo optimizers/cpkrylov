@@ -71,8 +71,7 @@ function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
 %        matrix;
 % M:     operator, the action of the constraint preconditioner on a
 %        vector;
-% opts:  [optional] struct variable with the following (possible)
-%        fields:
+% opts:  [optional] struct variable with the following fields:
 %        atol  - absolute tolerance for CP-CG stopping criterion
 %                [default 1e-6],
 %        rtol  - relative tolerance for CP-CG stopping criterion
@@ -133,7 +132,7 @@ function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
     stopTol = atol + rtol * residNorm;
     residHistory = [residNorm];
 
-    itn = 0;    % iteration index
+    itn = 0;    % Iteration index.
 
     % Print initial iteration and residual norm (if required).
     if display_info

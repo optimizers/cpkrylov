@@ -78,8 +78,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
 %        preconditioner on a vector, i.e., M*z returns the solution of
 %          [ G   B' ] u = z;
 %          [ B  -C  ]
-% opts:  [optional] struct variable with the following (possible)
-%        fields:
+% opts:  [optional] struct variable with the following fields:
 %        atol  - absolute tolerance for stopping criterion 1
 %                [default 1e-6],
 %        rtol  - relative tolerance for stopping criterion 1
@@ -201,7 +200,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
         info_fmt = '%5d  %9.2e';
         fprintf(header_fmt, 'iter', '|resid|');
         if btol > 0
-            % make room to print backward error, operator norm and iterate norm
+            % Make room to print backward error, operator norm and iterate norm.
             header_fmt2 = '  %9s  %9s  %9s';
             fprintf(header_fmt2, 'bkerr', '|op|', '|x|');
         end

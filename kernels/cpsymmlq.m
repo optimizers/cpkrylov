@@ -71,8 +71,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
 %        matrix;
 % M:     operator, the action of the constraint preconditioner on a
 %        vector;
-% opts:  [optional] struct variable with the following (possible)
-%        fields:
+% opts:  [optional] struct variable with the following fields:
 %        atol  - absolute tolerance for CP-SYMMLQ stopping criterion
 %                [default 1e-6],
 %        rtol  - relative tolerance for CP-SYMMLQ stopping criterion
@@ -122,7 +121,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
     zeron = zeros(n,1);
     zerom = zeros(m,1);
 
-    % Initialize some vectors and the iteration index
+    % Initialize some vectors and the iteration index.
     x  = zeron;
     y  = zerom;                % yk = y0 - qk, y0 = 0 ==> yk = -qk  
     u  = b;                    % u0 = b - A * x0 = b

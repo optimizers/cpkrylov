@@ -79,8 +79,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 %        matrix;
 % M:     operator, the action of the constraint preconditioner on a
 %        vector;
-% opts:  [optional] struct variable with the following (possible)
-%        fields:
+% opts:  [optional] struct variable with the following fields:
 %        atol  - absolute tolerance for CP-DQGMRES stopping criterion
 %                [default 1e-6],
 %        rtol  - relative tolerance for CP-DQGMRES stopping criterion

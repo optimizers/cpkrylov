@@ -124,7 +124,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
         error(errmsg);
     end
     
-    % Set up coefficient matrix and constraint preconditioner.
+    % Set up coefficient matrix and constraint preconditioner
     tstartp = tic;
     n = size(A,1);
     m = size(B,1);

@@ -72,14 +72,14 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 %        matrix;
 % M:     operator, the action of the constraint preconditioner on a
 %        vector;
-% opts:  [optional] struct variable with the following (possible)
-%        fields:
+% opts:  [optional] struct variable with the following fields:
 %        atol    - absolute tolerance for CP-GMRES stopping criterion
 %                  [default 1e-6],
 %        rtol    - relative tolerance for CP-GMRES stopping criterion
 %                  [default 1e-6],
 %        restart - restart parameter l of CP-GMRES(l) [default 50],
 %        reorth  - partial reorthogonalization, true/false [default false],
+%                  not implemented yet
 %        itmax   - maximum number of CP-GMRES iterations [default n+m],
 %        print   - display info about CP-GMRES iterations [default true].
 %
@@ -185,7 +185,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
             residHistory = [residNorm];
         end
 
-        k = 0;             % inner iteration index
+        k = 0;             % Inner iteration index.
         g(1) = residNorm;
 
         % Print initial iteration and residual norm (if required).
@@ -214,8 +214,6 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
             end
             H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
-%             fprintf('\n\n K = %d -- H after computing next Krylov vector\n', k);
-%             fprintf('\n %8.2e %8.2e %8.2e %8.2e %8.2e %8.2e \n',H');  
 
             if H(k+1,k) ~= 0          % Lucky breakdown if = 0.
                 V(:,k+1) = V(:,k+1) / H(k+1,k);
