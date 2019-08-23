@@ -7,7 +7,7 @@
 - the `dy` coming out of the iterative solver results in an incorrect `y` if we update `y = y0 + dy` --- FIXED
 - CPMINRES --- DONE
 - CPSYMMLQ --- DONE
-- use `logging4matlab`?
-- write a simple example program
+- write a simple example program - DONE (2 example programs)
 - write README for github
 - which licence?
+- use `logging4matlab`?
