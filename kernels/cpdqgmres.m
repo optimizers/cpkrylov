@@ -42,15 +42,6 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 % tolerances, k is the iteration index, and itmax is the maximum number of
 % iterations.
 %
-% where residNorm0 is the 2-norm of the initial residual, residNorm
-% is an estimate of the 2-norm of the current residual, atol and rtol
-% are absolute and relative tolerances, k is the iteration index, and
-% itmax is the maximum number of iterations.
-% For details on the stopping criterion, see
-%   Saad & Wu, DQGMRES: a Direct Quasi-minimal Residual Algorithm
-%   Based on Incomplete Orthogonalization, Numerical Linear Algebra with
-%   Applications, 3(4), pp. 329-343, 1996.
-%
 % NOTE that
 % - the argument A may be a matrix or a linear operator, but C and G
 %   must be explicit matrices;
