@@ -35,9 +35,12 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 %
 % The iterations stop when
 %
-%   sqrt(max(1, k-mem+1)) * residNorm <= stopTol = atol + rtol * residNorm0
-% or
-%   k = itmax,
+%   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (k = itmax),
+%
+% where residNorm and residNorm0 are estimates of the 2-norms of the
+% current and initial residuals, atol and rtol are absolute and relative
+% tolerances, k is the iteration index, and itmax is the maximum number of
+% iterations.
 %
 % where residNorm0 is the 2-norm of the initial residual, residNorm
 % is an estimate of the 2-norm of the current residual, atol and rtol
@@ -178,10 +181,16 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     end
 
     % Main loop.
-
-    % The following stopping criterion compensates for the lag in the
-    % residual, but usually increases the number of iterations.
-    % while sqrt(max(1, k-mem+1)) * residNorm > stopTol && k < itmax
+    %
+    % The stopping criterion
+    %           sqrt(max(1, k-mem+1)) * residNorm <= stopTol
+    % compensates for the lag in the residual, but it may unnecessarily
+    % increase the number of iterations (see Saad & Wu, DQGMRES: a Direct
+    % Quasi-minimal Residual Algorithm Based on Incomplete Orthogonalization,
+    % NLAA 3(4), pp. 329-343, 1996).
+    % Therefore, we use the stopping criterion
+    %                       residNorm <= stopTol
+    % with an estimate of the residual norm.
 
     while residNorm > stopTol && k < itmax  % less accurate, but acceptable
 
@@ -190,7 +199,7 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         % Set position in circular stack where (k+1)-st Krylov vector should go.
         kpos = mod(k-1, mem+1) + 1;  % Position corresponding to k in the circular stack.
         kp1pos = mod(k, mem+1) + 1;  % Position corresponding to k+1 in the circular stack.
-        rotpos = mod(k-1, mem) + 1;  % Position of the current rotation parameters
+        rotpos = mod(k-1, mem) + 1;  % Position of the current rotation parameters.
 
         % Compute next Krylov vectors from the modified Gram-Schmidt process.
         % Only orthogonalize against the most recent min(k,mem) vectors.
