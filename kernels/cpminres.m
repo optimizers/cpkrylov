@@ -55,8 +55,8 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
 % REFERENCE
 %   D. di Serafino and D. Orban,
 %   Constraint-Preconditioned Krylov Solvers for Regularized
-%   Saddle-Point Systems.
-%   TBA
+%   Saddle-Point Systems,
+%   Cahier du GERAD G-2019-72, GERAD, Montreal, October 2019.
 %
 %======================================================================
 % INPUT ARGUMENTS
