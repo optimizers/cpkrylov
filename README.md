@@ -36,8 +36,8 @@ of the saddle-point matrix is zero) in
 
    Nicholas I. M. Gould, Mary E. Hribar, and Jorge Nocedal,  
    On the solution of equality constrained quadratic programming    
-   problems quadratic programming problems arising in optimization,    
-   SIAM Journal on Scientific Computing, 23(4), pp. 1376?1395, 2001.
+   problems arising in optimization,    
+   SIAM Journal on Scientific Computing, 23(4), pp. 1376-1395, 2001.
 
 The linear operatos are defined using the Spot toolbox by Ewout van
 den Berg and Michael P. Friedlander. See https://github.com/mpf/spot.
