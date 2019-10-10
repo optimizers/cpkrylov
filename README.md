@@ -10,7 +10,7 @@ dominique.orban@gerad.ca.
 
 ## Last update
 
-v 1.0 - October 8, 2019.
+Version 1.0 - October 8, 2019.
 
 ## Description
 
