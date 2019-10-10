@@ -25,7 +25,9 @@
 %   D. di Serafino and D. Orban,
 %   Constraint-Preconditioned Krylov Solvers for Regularized
 %   Saddle-Point Systems,
-%   Cahier du GERAD G-2019-72, GERAD, Montreal, October 2019.
+%   Cahier du GERAD G-2019-72, GERAD, Montreal, October 2019,
+%   available from http://www.optimization-online.org/DB_HTML/2019/10/7411.html
+%   and https://arxiv.org/abs/1910.02552.
 %
 % The linear system is obtained by permuting the matrix and the rhs of a
 % nonsymmetric system coming from a collection of regularized saddle-point
