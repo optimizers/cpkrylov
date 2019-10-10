@@ -53,7 +53,7 @@ spot-master directory must be added to the Matlab path, e.g., with the Matlab co
 The user must also add to the MATLAB path the root cpkrylov directory and its subdirectories
 kernels, ops and utils. This can be done by running cpk_path_setup.m.
 
-## Content of cpkrylov package
+## Contents of the package
 
 - reg_cpkrylov.m:    
   main driver, which performs pre-processing operations, calls the requested solver,
@@ -79,7 +79,7 @@ kernels, ops and utils. This can be done by running cpk_path_setup.m.
   function implementing a symmetric Given rotation (by M. A. Saunders and S.-C. Choi),
   called by cpdqgmres and cpgmres.  
 
-# Examples of use of cpkrylov
+## Examples of use of cpkrylov
 
 - cpk_exprog1.m:    
   example program 1, runs cpminres (or cpgc, or cpcglanczos, or cpdqgmres) on the symmetric
