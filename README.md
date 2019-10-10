@@ -17,10 +17,10 @@ Version 1.0 - October 8, 2019.
 cpkrylov is a Matlab package implementing Constraint-Preconditioned variants of
 Krylov solvers for the solution of *regularized* saddle-point linear systems.
 The saddle-point matrix is assumed to be nonsingular; its leading block may be
-nonsymmetric, and its trailing block may be nonzero and symmetric.
+nonsymmetric, and its trailing block must be nonzero and symmetric.
 In particular, cpkrylov implements constraint-preconditioned variants of the
 CG, Lanczos-CG, MINRES, SYMMLQ, GMRES(l) and DQGMRES methods.
-Details on the solvers and the constraint preconditioners used by them are provided in
+Details on the solvers and the related constraint preconditioners are provided in
 
    Daniela di Serafino and Dominique Orban,    
    Constraint-Preconditioned Krylov Solvers for Regularized Saddle-Point Systems,   
@@ -64,8 +64,6 @@ kernels, ops and utils. This can be done by running cpk_path_setup.m.
   function implementing the constraint-preconditioned Lanczos version of CG;  
 - kernels/cpminres.m:    
   function implementing the constraint-preconditioned MINRES method;  
-- kernels/cpminres.m:    
-  function implementing the constraint-preconditioned MINRES method;  
 - kernels/cpsymmlq.m:    
   function implementing the constraint-preconditioned SYMMLQ method;  
 - kernels/cpdqgmres.m:    
@@ -78,6 +76,8 @@ kernels, ops and utils. This can be done by running cpk_path_setup.m.
 - utils/SymGivens:    
   function implementing a symmetric Given rotation (by M. A. Saunders and S.-C. Choi),
   called by cpdqgmres and cpgmres.  
+
+See the documentation inside each file for further details.
 
 ## Examples of use of cpkrylov
 
