@@ -32,7 +32,7 @@ Note that the leading block of the saddle-point matrix may be a matrix or a
 linear operator, but the other blocks must be explicit matrices. The constraint
 preconditioner P is implemented as linear operator M such that M\*z returns
 inv(P)\*z. The operator M also implements iterative refinement and residual update,
-as suggested (for the case C = 0) in
+as suggested (for the case where the trailing block is zero) in
 
    Nicholas I. M. Gould, Mary E. Hribar, and Jorge Nocedal,  
    On the solution of equality constrained quadratic programming    
