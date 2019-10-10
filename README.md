@@ -28,24 +28,24 @@ Details on the solvers and the related constraint preconditioners are provided i
    available from http://www.optimization-online.org/DB_HTML/2019/10/7411.html    
    and https://arxiv.org/abs/1910.02552.
 
-Note that the leading block of the saddle-point matrix may be a matrix or a
-linear operator, but the other blocks must be explicit matrices. The constraint
-preconditioner P is implemented as linear operator M such that M\*z returns
-inv(P)\*z. The operator M also implements iterative refinement and residual update,
-as suggested (for the case where the trailing block is zero) in
+Note that the leading block of the saddle-point matrix may be a matrix or a linear operator,
+but the other blocks must be explicit matrices. The constraint preconditioner P is implemented
+as linear operator M such that M\*z returns the solution of Pv=z. The operator M also implements
+iterative refinement and residual update, as suggested (for the case where the trailing block
+of the saddle-point matrix is zero) in
 
    Nicholas I. M. Gould, Mary E. Hribar, and Jorge Nocedal,  
    On the solution of equality constrained quadratic programming    
    problems quadratic programming problems arising in optimization,    
    SIAM Journal on Scientific Computing, 23(4), pp. 1376?1395, 2001.
 
-The linear operatos are defined using the Spot Toolbox by Ewout van
+The linear operatos are defined using the Spot toolbox by Ewout van
 den Berg and Michael P. Friedlander. See https://github.com/mpf/spot.
 
 ## Installation
 
 cpkrylov runs under MATLAB (it has been tested under MATLAB 2018b) and requires
-the Spot Toolbox (see https://github.com/mpf/spot). In order to use Spot, the
+the Spot toolbox (see https://github.com/mpf/spot). In order to use Spot, the
 spot-master directory must be added to the Matlab path, e.g., with the Matlab command
 
     addpath('path-to-spot-master')
