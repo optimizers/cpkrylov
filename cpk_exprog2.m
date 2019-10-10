@@ -7,7 +7,7 @@
 %
 %==========================================================================
 %
-% This program runs CP-MINRES (CP-CG, CP-CGLANCZOS, CP-DQGMRES) on a
+% This program runs CP-GMRES (or CP-DQGMRES) on a nonsymmetric
 % saddle-point linear system whose matrix has the form
 %
 %                     [ H+rho*I    0     0 |    J1'   ]     
