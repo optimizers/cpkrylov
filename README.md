@@ -1,4 +1,4 @@
-# cpkrylov v. 1.0
+# cpkrylov
 
 
 ## Authors
@@ -10,7 +10,7 @@ dominique.orban@gerad.ca.
 
 ## Last update
 
-October 8, 2019.
+v 1.0 - October 8, 2019.
 
 ## Description
 
