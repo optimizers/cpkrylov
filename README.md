@@ -1,14 +1,14 @@
-                                 cpkrylov v. 1.0
-===============================================================================
+cpkrylov v. 1.0
+===============
 
 Authors
 -------
 
-Daniela di Serafino, University of Campania "Luigi Vanvitelli", Caserta, Italy
-Dominique Orban, GERAD and École Polytechnique, Montréal, QC, Canada.
-E-mails:
-  daniela.diserafino@unicampania.it
-  dominique.orban@gerad.ca
+Daniela di Serafino, University of Campania "Luigi Vanvitelli", Caserta, Italy,
+daniela.diserafino@unicampania.it.
+
+Dominique Orban, GERAD and École Polytechnique, Montréal, QC, Canada,
+dominique.orban@gerad.ca
 
 Last update
 -----------
