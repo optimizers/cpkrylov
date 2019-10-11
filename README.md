@@ -81,10 +81,10 @@ See the documentation inside each file for further details.
 ## Examples of use of cpkrylov
 
 - cpk_exprog1.m:    
-  example program 1, runs cpminres (or cpgc, or cpcglanczos, or cpdqgmres) on the symmetric
+  example program 1, which runs cpminres (or cpgc, or cpcglanczos, or cpdqgmres) on the symmetric
   saddle-point linear system stored in cvxqp1_m_2x2_symm_iter10.mat;                           
 - cpk_exprog2.m:    
-  cpgmgmres (or cpdqgmres) on the nonsymmetric saddle-point linear system stored in
+  example program 2, which runs cpgmgmres (or cpdqgmres) on the nonsymmetric saddle-point linear system stored in
   cvxqp2_s_3x3_nonsymm_perm_iter10.mat;                        
 - cvxqp1_m_2x2_symm_iter10.mat, cvxqp2_s_3x3_nonsymm_perm_iter10.mat:    
   MATLAB mat-files containing the data for the example programs.
