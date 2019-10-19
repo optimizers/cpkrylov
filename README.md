@@ -54,25 +54,25 @@ kernels, ops and utils. This can be done by running `cpk_path_setup.m`.
 
 ## Contents of the package
 
-- reg_cpkrylov.m:    
+- `reg_cpkrylov.m`:    
   main driver, which performs pre-processing operations, calls the requested solver,
   performs post-processing operations, and returns solutions and statistics to the user;                 
-- kernels/cpcg.m:    
+- `kernels/cpcg.m`:    
   function implementing the constraint-preconditioned CG method;  
-- kernels/cpcglanczos.m:    
+- `kernels/cpcglanczos.m`:    
   function implementing the constraint-preconditioned Lanczos version of CG;  
-- kernels/cpminres.m:    
+- `kernels/cpminres.m`:    
   function implementing the constraint-preconditioned MINRES method;  
-- kernels/cpsymmlq.m:    
+- `kernels/cpsymmlq.m`:    
   function implementing the constraint-preconditioned SYMMLQ method;  
-- kernels/cpdqgmres.m:    
+- `kernels/cpdqgmres.m`:    
   function implementing the constraint-preconditioned DQGMRES method;  
-- kernels/cpgmres.m:    
+- `kernels/cpgmres.m`:    
   function implementing the constraint-preconditioned GMRES(l) method;  
-- ops/LDL2.m:    
+- `ops/LDL2.m`:    
   operator representing the LDL factorization of a symmetric indefinite matrix with optional
   iterative refinement (needed to apply the constraint preconditioner);           
-- utils/SymGivens:    
+- `utils/SymGivens`:    
   function implementing a symmetric Given rotation (by M. A. Saunders and S.-C. Choi),
   called by cpdqgmres and cpgmres.  
 
@@ -90,5 +90,7 @@ Examples may be found in the `examples` directory.
   `cvxqp2_s_3x3_nonsymm_perm_iter10.mat`;
 - `cvxqp1_m_2x2_symm_iter10.mat`, `cvxqp2_s_3x3_nonsymm_perm_iter10.mat`:    
   MATLAB mat-files containing the data for the example programs.
+
+## License
 
   [![LGPLv3](http://www.gnu.org/graphics/lgplv3-88x31.png)](http://www.gnu.org/licenses/lgpl.html "LGPLv3")
