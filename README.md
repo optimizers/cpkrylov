@@ -50,7 +50,7 @@ master branch of the Spot repository must be added to the Matlab path, e.g., wit
     addpath('path/to/spot/master')
 ```
 The user must also add to the MATLAB path the root cpkrylov directory and its subdirectories
-kernels, ops and utils. This can be done by running `cpk_path_setup.m`.
+`kernels`, `ops` and `utils`. This can be done by running `cpk_path_setup.m`.
 
 ## Contents of the package
 
