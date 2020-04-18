@@ -134,7 +134,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
         betastr = num2str(beta);
-        errmsg = ['Iter 0, beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];: preconditioner does not behave as a spd matrix.';
+        errmsg = ['Iter 0, beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];
         error(errmsg);
     end
     if beta ~= 0
