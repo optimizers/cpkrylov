@@ -266,10 +266,9 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
             qkp1  = qkp1 - alpha*qk - beta*qkm1;
             beta  = dot(u, vkp1) + dot(t, qkp1);
             if beta < 0
-                % beta
                 itstr = num2str(k);
                 errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
-                %error(errmsg);
+                error(errmsg);
             end
             if beta ~= 0
                 beta = sqrt(beta);
