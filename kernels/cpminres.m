@@ -133,7 +133,8 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
-        errmsg = 'Iter 0: preconditioner does not behave as a spd matrix.';
+        betastr = num2str(beta);
+        errmsg = ['Iter 0, beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];: preconditioner does not behave as a spd matrix.';
         error(errmsg);
     end
     if beta ~= 0
@@ -189,9 +190,9 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         qkp1 = qkp1 - alpha*qk - beta*qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
         if beta < 0
-            beta
+            betastr = num2str(beta);
             itstr = num2str(k);
-            errmsg = ['Iter ' itstr ': preconditioner does not behave as a spd matrix.'];
+            errmsg = ['Iter ' itstr ', beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];
             error(errmsg);
         end
         if beta ~= 0
