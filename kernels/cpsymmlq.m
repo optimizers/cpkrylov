@@ -356,6 +356,6 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
     stats.lqresidHistory = lqresidHistory;
     stats.qrresidHistory = qrresidHistory;
     stats.cgresidHistory = cgresidHistory;
-    flag.solved           = (cgresidNorm <= stopTol);
+    flag.solved          = (cgresidNorm <= stopTol);
 
 end

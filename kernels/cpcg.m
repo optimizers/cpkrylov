@@ -1,7 +1,7 @@
-function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
+function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 
 %======================================================================
-% [x, y, stats, flags] = cpcg(b, A, C, M, opts)
+% [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 %
 % Constraint-preconditioned CG for regularized saddle-point systems.
 %
@@ -186,7 +186,7 @@ function [x, y, stats, flags] = cpcg(b, A, C, M, opts)
     end
 
     % Wrap up.
-    flags.solved = residNorm <= stopTol;
+    flag.solved = residNorm <= stopTol;
     stats.niters = itn;
     stats.residHistory = residHistory;
     y = a;

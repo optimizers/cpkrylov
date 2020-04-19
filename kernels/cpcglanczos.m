@@ -306,12 +306,13 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     flag.solved = false;
     stats.status = 'maximum number of iterations attained';
     if residNorm <= stopTol
-        flags.solved = true;
-        stats.status = 'residual small compared to initial residual';
+            flag.solved = true;
+            stats.status = 'residual small compared to initial residual';
     end
-    if residNorm <= bstopTol
-        flags.solved = true;
-        stats.status = 'backward error small';
+    if btol > 0
+        if residNorm <= bstopTol
+            flag.solved = true
+            stats.status = 'backward error small';
+        end
     end
-
 end
