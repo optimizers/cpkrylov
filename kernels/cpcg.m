@@ -154,7 +154,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 
         % Print curvatures and steplength (if required).
         if display_info
-            fprintf('%9.2e  %9.2e  %9.2e\n', pAp, qCq, alpha);
+            fprintf('%9.2e  %9.2e  %9.2e\n', full(pAp), full(qCq), alpha);
         end
 
         x = x + alpha *  p;
