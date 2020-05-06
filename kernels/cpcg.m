@@ -137,6 +137,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
     % Print initial iteration and residual norm (if required).
     if display_info
         fprintf('\n**** Constraint-preconditioned version of CG ****\n\n');
+        fprintf('stopTol = %e\n',stopTol);
         fprintf('%5s  %9s  %9s  %9s  %9s\n', ...
                 'iter', 'resid', 'pr-curv', 'du-curv', 'steplen');
         fprintf('%5d  %9.2e  ', itn, residNorm);
@@ -182,7 +183,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
     end
     
     if display_info
-        fprintf('\n'); 
+        fprintf('\n\n'); 
     end
 
     % Wrap up.

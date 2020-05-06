@@ -190,6 +190,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 
         % Print initial iteration and residual norm (if required).
         if display_info
+            printf('stopTol = %e\n',stopTol);
             if outer == 1
                 fprintf(header_fmt, 'iter', '|resid|');
             end

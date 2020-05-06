@@ -165,6 +165,7 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     if display_info
         header_fmt = '%5s  %9s\n';
         info_fmt = '%5d  %9.2e\n';
+        fprintf('stopTol = %e\n',stopTol);
         fprintf(header_fmt, 'iter', '|resid|');
         fprintf(info_fmt, k, residNorm);
     end

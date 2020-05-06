@@ -156,8 +156,9 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     qkp1  = - vprec(n+1:n+m); % q1   = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta = dot(u0, v1) + dot(t0, q1), t0 = 0
     if beta < 0
+        betastr = num2str(beta);
         exc = MException('CPCGLanczos:IndefiniteError', ...
-                         sprintf('preconditioner not second-order sufficient at iteration 0'));
+                         sprintf(['Iter 0, beta = ' betastr ' : preconditioner not second-order sufficient']));
         throw(exc);
     end
     if beta ~= 0
@@ -198,6 +199,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     if display_info
         header_fmt = '%5s  %9s';
         info_fmt = '%5d  %9.2e';
+        fprintf('stopTol = %e, bstopTol = %e\n',stopTol, bstopTol);
         fprintf(header_fmt, 'iter', '|resid|');
         if btol > 0
             % Make room to print backward error, operator norm and iterate norm.
@@ -239,11 +241,15 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
         vkp1 = vprec(1:n) - alpha * vk - beta * vkm1;
         qkp1 = qk - vprec(n+1:n+m);
         qkp1 = qkp1 - alpha * qk - beta * qkm1;
+        bb1 = dot(u, vkp1); bb2 = dot(t, qkp1);
         beta = dot(u, vkp1) + dot(t, qkp1);
 
         if beta < 0
+            betastr = num2str(beta);
+            itstr = num2str(k);
+            errmsg = ['Iter ' itstr ', beta = ' betastr ' : preconditioner not second-order sufficient'];
             exc = MException('CPCGLanczos:IndefiniteError', ...
-                             sprintf('preconditioner not second-order sufficient at iteration %d', k));
+                         sprintf(errmsg));
             throw(exc);
         end
 
@@ -311,7 +317,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
     end
     if btol > 0
         if residNorm <= bstopTol
-            flag.solved = true
+            flag.solved = true;
             stats.status = 'backward error small';
         end
     end

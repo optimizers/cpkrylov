@@ -176,6 +176,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
         fprintf('stops at iter = 0\n\n');
         header_fmt = '%5s   %9s   %9s   %9s\n';
         info_fmt   = '%5d  %9.2e   %9.2e    %9.2e\n';
+        printf('stopTol = %e\n',stopTol);
         fprintf(header_fmt, 'iter', '|cgresid|', '|lqresid|', '|qrresid|');
         if cgresidNorm <= stopTol
             fprintf(info_fmt, k, cgresidNorm, lqresidNorm, qrresidNorm);
