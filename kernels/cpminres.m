@@ -132,16 +132,18 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
     vkp1  = vprec(1:n);
     qkp1  = - vprec(n+1:n+m); % q1 = q0 - vprec(n+1:n+m) = - vprec(n+1:n+m)
     beta  = dot(u, vkp1);     % beta  = dot(u0, v1) + dot(t0, q1), t0 = 0
-    if beta < 0
+    bbeta = abs(beta);
+    if bbeta < eps
         betastr = num2str(beta);
         errmsg = ['Iter 0, beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];
         error(errmsg);
-    end
-    if beta ~= 0
-        % Normalize Lanczos vectors v1 and q1.
-        beta = sqrt(beta);
-        vkp1 = vkp1/beta;
-        qkp1 = qkp1/beta;
+    else
+        if bbeta >= eps
+            % Normalize Lanczos vectors v1 and q1.
+            beta = sqrt(bbeta);
+            vkp1 = vkp1/beta;
+            qkp1 = qkp1/beta;
+        end
     end
     wv  = vkp1;
     wq  = qkp1;
@@ -190,16 +192,18 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         qkp1 = qk - vprec(n+1:n+m);
         qkp1 = qkp1 - alpha*qk - beta*qkm1;
         beta = dot(u, vkp1) + dot(t, qkp1);
-        if beta < 0
+        bbeta = abs(beta);
+        if bbeta < eps 
             betastr = num2str(beta);
             itstr = num2str(k);
             errmsg = ['Iter ' itstr ', beta = ' betastr ' : preconditioner does not behave as a spd matrix.'];
             error(errmsg);
-        end
-        if beta ~= 0
-            beta = sqrt(beta);
-            vkp1 = vkp1/beta;
-            qkp1 = qkp1/beta;
+        else
+            if bbeta >= eps
+                beta = sqrt(bbeta);
+                vkp1 = vkp1/beta;
+                qkp1 = qkp1/beta;
+            end
         end
 
         % Apply previous rotation Qk-1 to get
