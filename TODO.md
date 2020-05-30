@@ -1,4 +1,4 @@
-# TO DO (October 4, 2019)
+# TO DO (May 30, 2020)
 
 - Add further stopping criteria? Backward error stopping criterion already
   implemented in CP-CGLANCZOS.
