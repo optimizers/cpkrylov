@@ -151,7 +151,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 
     % Shift linear system so rhs has the form [b ; 0]
     shift = false;
-    if b(n+1:n+m) ~= zeros(m,1)
+    if any(b(n+1:n+m))
         shift = true;
         xy0 = M * [zeros(n,1); b(n+1:n+m)];
         b1 = b(1:n) - A * xy0(1:n) - B' * xy0(n+1:n+m);
