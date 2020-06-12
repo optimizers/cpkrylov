@@ -55,7 +55,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 % The linear operatos are defined using the Spot Toolbox by Ewout van
 % den Berg and Michael P. Friedlander.
 % See http://www.cs.ubc.ca/labs/scl/spot.
-% 
+%
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
@@ -152,15 +152,12 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
         %info_fmt = '%5d  %9.2e\n';
         info_fmt = '%5d  %14.7e\n';
     end
-    
+
     % Outer loop.
     while ~finished && outer < outermax
 
         outer = outer + 1;
 
-        % Set initial Krylov vector and residual norm.
-        % Separating the case outer = 1 saves some computation. Is it
-        % worthwhile?
         q = zerom;
         if outer == 1
             u = b;                % u_0 = b - A * x_0 = b
@@ -227,7 +224,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
-            
+
             % Compute and apply current (symmetric) Givens rotation:
             % [ck  sk] [H(k,k)  ] = [*]
             % [sk -ck] [H(k+1,k)]   [0]
@@ -251,7 +248,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
         y = y - q;
 
         finished = residNorm <= stopTol;
-        
+
     end
 
     % Wrap up.

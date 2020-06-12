@@ -45,7 +45,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %  [ B  -C  ] [u]   [z2].
 %
 % The operator M also implements iterative refinement and residual update,
-% as suggested (for the case C = 0) in 
+% as suggested (for the case C = 0) in
 %   Nicholas I. M. Gould, Mary E. Hribar, and Jorge Nocedal,
 %   On the solution of equality constrained quadratic programming
 %   problems quadratic programming problems arising in optimization,
@@ -54,7 +54,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 % The linear operatos are defined using the Spot Toolbox by Ewout van
 % den Berg and Michael P. Friedlander.
 % See http://www.cs.ubc.ca/labs/scl/spot.
-% 
+%
 %======================================================================
 % REFERENCE
 %   D. di Serafino and D. Orban,
@@ -69,7 +69,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 % b:      n-vector, the vector b in the rhs of the saddle-point system;
 % A:      n x n matrix or linear operator, (1,1) block of the saddle-
 %         point matrix;
-% B:      m x n matrix (m <= n), (2,1) block of the saddle-point matrix;  
+% B:      m x n matrix (m <= n), (2,1) block of the saddle-point matrix;
 % C:      m x m matrix (m <= n), -C is the (2,2) block in the saddle-
 %         point matrix;
 % M:      operator, the action of the constraint preconditioner on a
@@ -93,7 +93,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %         residual_update - perform Gould-Hribar-Nocedal residual update,
 %                   true/false, [default false].
 % NOTES
-% - The only fields of opts that are recognized by reg_cpkrylov are 
+% - The only fields of opts that are recognized by reg_cpkrylov are
 %   nitref, itref_tol, force_itref, and residual_update;
 %   the remaining fields of opts are recognized by the Krylov solver
 %   implementation specified by `method`.
@@ -102,7 +102,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
 %   or
 %          opts.force_itref,
 %   where rNorm and xNorm are the 2-norms of the residual and the
-%   solution resulting fom the application of the preconditioner.    
+%   solution resulting fom the application of the preconditioner.
 %
 % OUTPUT ARGUMENTS
 % x:     (n+m)-vector, computed solution;
@@ -123,7 +123,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
         errmsg = 'reg_cpkrylov: not enough inputs';
         error(errmsg);
     end
-    
+
     % Set up coefficient matrix and constraint preconditioner
     tstartp = tic;
     n = size(A,1);
@@ -148,7 +148,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     end
 
     tstarts = tic;
-    
+
     % Shift linear system so rhs has the form [b ; 0]
     shift = false;
     if b(n+1:n+m) ~= zeros(m,1)
@@ -158,7 +158,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     else
         b1 = b(1:n);
     end
-    
+
     % Solve linear system
     [dx, dy, stats, flag] = method(b1, A, C, M, opts);
 
@@ -175,7 +175,7 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     x  = [x1; x2];
     
     stime = toc(tstarts);
-    
+
     stats.ptime = ptime;
     stats.stime = stime;
 

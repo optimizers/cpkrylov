@@ -34,7 +34,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 % The iterations stop when
 %
 %   (residNorm <= stopTol = atol + rtol * residNorm0)  or  (itn = itmax),
-% 
+%
 % where residNorm and residNorm0 are the 2-norms of the current and
 % initial residuals, atol and rtol are absolute and relative tolerances,
 % itn is the iteration index, and itmax is the maximum number of
@@ -54,7 +54,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 % The linear operatos are defined using the Spot Toolbox by Ewout van
 % den Berg and Michael P. Friedlander.
 % See http://www.cs.ubc.ca/labs/scl/spot.
-% 
+%
 %======================================================================
 % REFERENCE
 %   H.S. Dollar, N.I.M. Gould, W.H.A. Schilders, and A.J. Wathen,
@@ -126,7 +126,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
     ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
     p = -r;
     q = -u;
-    
+
     residNorm2 = g' * r;
     residNorm = sqrt(residNorm2);
     stopTol = atol + rtol * residNorm;
@@ -162,7 +162,7 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
         a = a + alpha *  q;
         g = g + alpha * Ap;
         w = w + alpha * Cq;
-        
+
         ru = M * [g ; w]; r = ru(1:n); u = ru(n+1:n+m);
         t = a + u;
         residNorm2_new = g' * r + t' * w;
@@ -170,20 +170,20 @@ function [x, y, stats, flag] = cpcg(b, A, C, M, opts)
 
         p = -r + beta * p;
         q = -t + beta * q;
- 
+
         residNorm2 = residNorm2_new;
         residNorm = sqrt(residNorm2);
         residHistory = [residHistory; residNorm];
-        
+
         % Print current iteration and residual norm (if required).
         if display_info
             fprintf('%5d  %9.2e  ', itn, residNorm);
         end
-        
+
     end
-    
+
     if display_info
-        fprintf('\n\n'); 
+        fprintf('\n\n');
     end
 
     % Wrap up.
