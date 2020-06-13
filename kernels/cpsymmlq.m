@@ -60,7 +60,7 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
 %   D. di Serafino and D. Orban,
 %   Constraint-Preconditioned Krylov Solvers for Regularized
 %   Saddle-Point Systems.
-%   TBA
+%   Cahier du GERAD G-2019-72, GERAD, Montreal, October 2019.
 %
 %======================================================================
 % INPUT ARGUMENTS
@@ -210,11 +210,9 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
             error(errmsg);
         else
             bbeta = abs(beta);
-            if bbeta >= eps100
-                beta = sqrt(bbeta);
-                vkp1 = vkp1/beta;
-                qkp1 = qkp1/beta;
-            end
+            beta = sqrt(bbeta);
+            vkp1 = vkp1/beta;
+            qkp1 = qkp1/beta;
         end
         
         % Initialize some quantities.
@@ -280,11 +278,9 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
                 error(errmsg);
             else
                 bbeta = abs(beta);
-                if bbeta >= eps100
-                    beta = sqrt(bbeta);
-                    vkp1 = vkp1/beta;
-                    qkp1 = qkp1/beta;
-                end
+                beta = sqrt(bbeta);
+                vkp1 = vkp1/beta;
+                qkp1 = qkp1/beta;
             end
             
             % Update square of estimate of matrix norm.

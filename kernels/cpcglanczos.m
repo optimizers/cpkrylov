@@ -163,12 +163,10 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
         throw(exc);
     else
         bbeta = abs(beta);
-        if bbeta >= eps100
-            % Normalize Lanczos vectors v1 and q1.
-            beta = sqrt(bbeta);
-            vkp1 = vkp1 / beta;
-            qkp1 = qkp1 / beta;
-        end
+        % Normalize Lanczos vectors v1 and q1.
+        beta = sqrt(bbeta);
+        vkp1 = vkp1 / beta;
+        qkp1 = qkp1 / beta;
     end
     wv = vkp1;
     wq = qkp1;
@@ -255,11 +253,9 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
             throw(exc);
         else
             bbeta = abs(beta);
-            if bbeta >= eps100
-                beta = sqrt(bbeta);
-                vkp1 = vkp1 / beta;
-                qkp1 = qkp1 / beta;
-            end
+            beta = sqrt(bbeta);
+            vkp1 = vkp1 / beta;
+            qkp1 = qkp1 / beta;
         end
 
         % Compute data for next updates of x and y.
