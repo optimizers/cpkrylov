@@ -187,7 +187,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 
         % Print initial iteration and residual norm (if required).
         if display_info
-            printf('stopTol = %e\n',stopTol);
+            fprintf('stopTol = %e\n',stopTol);
             if outer == 1
                 fprintf(header_fmt, 'iter', '|resid|');
             end
@@ -218,14 +218,14 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 Q(:,k+1) = Q(:,k+1) / H(k+1,k);
             end
 
-            % Apply previous (symmetric) Givens rotations.
+            % Apply previous Givens reflections.
             for j = 1 : k-1
                 Hjk = c(j) * H(j,k) + s(j) * H(j+1,k);
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
 
-            % Compute and apply current (symmetric) Givens rotation:
+            % Compute and apply current Givens reflections:
             % [ck  sk] [H(k,k)  ] = [*]
             % [sk -ck] [H(k+1,k)]   [0]
             [c(k), s(k), H(k,k)] = SymGivens(H(k,k), H(k+1,k));
