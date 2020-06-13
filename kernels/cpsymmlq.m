@@ -145,10 +145,9 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
         errmsg = ['Iter 0, beta (before sqrt) = ' betastr ' : preconditioner does not behave as a spd matrix.'];
         error(errmsg);
     else
-        bbeta1 = abs(beta1);
-        if bbeta1 >= eps100
+        beta1 = sqrt(abs(beta1));
+        if beta1 > 0
             % Normalize Lanczos vectors v1 and q1.
-            beta1 = sqrt(bbeta1);
             vkp1  = vkp1/beta1;
             qkp1  = qkp1/beta1;
         end
@@ -209,10 +208,11 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
             errmsg = ['Iter 0, 2nd Lanczos vec, beta (before sqrt) = ' betastr ' : preconditioner does not behave as a spd matrix.'];
             error(errmsg);
         else
-            bbeta = abs(beta);
-            beta = sqrt(bbeta);
-            vkp1 = vkp1/beta;
-            qkp1 = qkp1/beta;
+            beta = sqrt(abs(beta));
+            if beta > 0
+                vkp1 = vkp1/beta;
+                qkp1 = qkp1/beta;
+            end
         end
         
         % Initialize some quantities.
@@ -277,10 +277,11 @@ function [x, y, stats, flag] = cpsymmlq(b, A, C, M, opts)
                 errmsg = ['Iter ' itstr ', beta (before sqrt) = ' betastr ' : preconditioner does not behave as a spd matrix.'];
                 error(errmsg);
             else
-                bbeta = abs(beta);
-                beta = sqrt(bbeta);
-                vkp1 = vkp1/beta;
-                qkp1 = qkp1/beta;
+                beta = sqrt(abs(beta));
+                if beta > 0
+                    vkp1 = vkp1/beta;
+                    qkp1 = qkp1/beta;
+                end
             end
             
             % Update square of estimate of matrix norm.

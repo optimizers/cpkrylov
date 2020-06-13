@@ -162,11 +162,12 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
                          sprintf(['Iter 0, beta (before sqrt) = ' betastr ' : preconditioner not second-order sufficient']));
         throw(exc);
     else
-        bbeta = abs(beta);
-        % Normalize Lanczos vectors v1 and q1.
-        beta = sqrt(bbeta);
-        vkp1 = vkp1 / beta;
-        qkp1 = qkp1 / beta;
+        beta = sqrt(abs(beta));
+        if beta > 0
+            % Normalize Lanczos vectors v1 and q1.
+            vkp1 = vkp1 / beta;
+            qkp1 = qkp1 / beta;
+        end
     end
     wv = vkp1;
     wq = qkp1;
@@ -252,10 +253,12 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
                          sprintf(errmsg));
             throw(exc);
         else
-            bbeta = abs(beta);
-            beta = sqrt(bbeta);
-            vkp1 = vkp1 / beta;
-            qkp1 = qkp1 / beta;
+            beta = sqrt(abs(beta));
+            if beta > 0
+                vkp1 = vkp1 / beta;
+                qkp1 = qkp1 / beta;
+                
+            end
         end
 
         % Compute data for next updates of x and y.

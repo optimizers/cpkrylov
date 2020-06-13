@@ -138,11 +138,12 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
         errmsg = ['Iter 0, beta (before sqrt) = ' betastr ' : preconditioner does not behave as a spd matrix.'];
         error(errmsg);
     else
-        bbeta = abs(beta);
+        beta = sqrt(abs(beta));
         % Normalize Lanczos vectors v1 and q1.
-        beta = sqrt(bbeta);
-        vkp1 = vkp1/beta;
-        qkp1 = qkp1/beta;
+        if beta > 0
+            vkp1 = vkp1/beta;
+            qkp1 = qkp1/beta;
+        end
     end
     wv  = vkp1;
     wq  = qkp1;
@@ -197,10 +198,11 @@ function [x, y, stats, flag] = cpminres(b, A, C, M, opts)
             errmsg = ['Iter ' itstr ', beta (before sqrt) = ' betastr ' : preconditioner does not behave as a spd matrix.'];
             error(errmsg);
         else
-            bbeta = abs(beta);
-            beta = sqrt(bbeta);
-            vkp1 = vkp1/beta;
-            qkp1 = qkp1/beta;
+            beta = sqrt(abs(beta));
+            if beta > 0
+                vkp1 = vkp1/beta;
+                qkp1 = qkp1/beta;
+            end
         end
 
         % Apply previous rotation Qk-1 to get
