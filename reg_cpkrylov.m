@@ -165,11 +165,9 @@ function [x, stats, flag] = reg_cpkrylov(method, b, A, B, C, G, opts)
     % Recover solution of initial system
     if shift
         x1 = xy0(1:n) + dx;
-        xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
         x2 = xy0(n+1:n+m) + dy;
     else
         x1 = dx;
-        xy = M * [b1 - A * dx + G * dx; zeros(m,1)];
         x2 = dy;
     end
     x  = [x1; x2];
