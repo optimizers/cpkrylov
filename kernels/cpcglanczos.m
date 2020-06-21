@@ -211,7 +211,7 @@ function [x, y, stats, flag] = cpcglanczos(b, A, C, M, opts)
         fprintf('\n');
         fprintf(info_fmt, k, residNorm);
         if btol > 0
-            info_fmt2 = '  %9.2e  %9.2e';
+            info_fmt2 = '%5d  %9.2e  %9.2e';
             fprintf(info_fmt2, 0, 0, xNorm);
         end
         fprintf('\n');
