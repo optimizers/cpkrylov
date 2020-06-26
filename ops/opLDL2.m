@@ -38,13 +38,14 @@ classdef opLDL2 < opSpot
       rNorm         % Residual norm (if iterative refinement is performed)
       nA            % Leading  block dimension
       nC            % Trailing block dimension
+      Aty           % Previous range space component
+      Cy
    end
 
    properties( SetAccess = public )
       nitref = 3    % Default max number of iterative refinement steps
       itref_tol = 1.0e-8  % Default iterative refinement tolerance
       force_itref = false  % Mostly for debugging
-      Aty = false   % Previous range space component
       residual_update = false
    end
 
@@ -86,6 +87,8 @@ classdef opLDL2 < opSpot
          op.sweepflag    = true;
          op.nA           = nA;
          op.nC           = nC;
+         op.Aty          = zeros(nA, 1);
+         op.Cy           = zeros(nC, 1);
       end % function opLDL2
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,11 +111,7 @@ classdef opLDL2 < opSpot
       end
 
       function op = set.residual_update(op, val)
-         if val ~= false & val ~= true
-            op.residual_update = false;
-         else
-            op.residual_update = val;
-         end
+         op.residual_update = val;
       end
 
       %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -162,13 +161,14 @@ classdef opLDL2 < opSpot
       function y = multiply(op, x, mode)
          n = op.nA;
          m = op.nC;
-         if op.residual_update & op.Aty
-            y = op.LDL * [x(1:n) - op.Aty ; x(n+1:op.n)];
+         if op.residual_update
+            y = op.LDL * [x(1:n) - op.Aty ; x(n+1:op.n) - op.Cy];
          else
             y = op.LDL * x;
          end
          if op.residual_update
             op.Aty = op.A(1:n, n+1:n+m) * y(n+1:n+m);
+            op.Cy = op.A(n+1:n+m, n+1:n+m) * y(n+1:n+m);
          end
          % Perform iterative refinement if necessary / requested
          if op.nitref > 0
