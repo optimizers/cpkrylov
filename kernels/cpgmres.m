@@ -146,11 +146,9 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
     finished = false;
     outer = 0;
     outermax = ceil(itmax/restart);
+    
     if display_info
         fprintf('\n**** Constraint-preconditioned version of GMRES(%d) ****\n\n', restart);
-        header_fmt = '%5s  %9s\n';
-        %info_fmt = '%5d  %9.2e\n';
-        info_fmt = '%5d  %14.7e\n';
     end
 
     % Outer loop.
@@ -160,8 +158,8 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 
         q = zerom;
         if outer == 1
-            u = b;                % u_0 = b - A * x_0 = b
-            t = zerom;            % t_0 =     C * q0 = 0, y0 = q0 = 0
+            u = b;                % u0 = b - A * x0 = b
+            t = zerom;            % t0 =     C * q0 = 0, y0 = q0 = 0
             w = M * [u; -t];
             V(:,1) = w(1:n,1);
             Q(:,1) = - w(n+1:n+m,1);
@@ -172,7 +170,10 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
             V(:,1) = w(1:n,1);
             Q(:,1) = y - w(n+1:n+m,1);
         end
-        residNorm = sqrt(dot(u, V(:,1)) + dot(t, Q(:,1)));
+        residNorm = sqrt( dot(u, V(:,1)) + dot(t, Q(:,1)) );
+        if ~isreal(residNorm)
+                residNorm = sqrt(real( dot(u, V(:,1)) + dot(t, Q(:,1)) ));
+        end
         if residNorm ~= 0
             V(:,1) = V(:,1) / residNorm;
             Q(:,1) = Q(:,1) / residNorm;
@@ -180,6 +181,7 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
         if outer == 1
             stopTol = atol + rtol * residNorm;
             residHistory = [residNorm];
+% %             fprintf('norm(rhs) = %g, residNorm = %g\n',norm(b),residNorm);
         end
 
         k = 0;             % Inner iteration index.
@@ -187,11 +189,14 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
 
         % Print initial iteration and residual norm (if required).
         if display_info
-            fprintf('stopTol = %e\n',stopTol);
             if outer == 1
+                header_fmt = '%5s  %9s\n';
+                % info_fmt = '%5d  %9.2e\n';
+                info_fmt = '%5d  %14.7e\n';
+                fprintf('stopTol = %e\n',stopTol);
                 fprintf(header_fmt, 'iter', '|resid|');
+                fprintf(info_fmt, k, residNorm);
             end
-            fprintf(info_fmt, k, residNorm);
         end
 
         % Inner loop.
@@ -212,26 +217,33 @@ function [x, y, stats, flag] = cpgmres(b, A, C, M, opts)
                 Q(:,k+1) = Q(:,k+1) - H(j,k) * Q(:,j);
             end
             H(k+1,k) = sqrt(dot(u, V(:,k+1)) + dot(t, Q(:,k+1)));
-
+            if ~isreal(H(k+1,k))
+                H(k+1,k) = sqrt(real( dot(u, V(:,k+1)) + dot(t, Q(:,k+1)) ));
+            end
             if H(k+1,k) ~= 0          % Lucky breakdown if = 0.
                 V(:,k+1) = V(:,k+1) / H(k+1,k);
                 Q(:,k+1) = Q(:,k+1) / H(k+1,k);
             end
 
-            % Apply previous Givens reflections.
+            % Apply previous Givens rotations.
             for j = 1 : k-1
                 Hjk = c(j) * H(j,k) + s(j) * H(j+1,k);
                 H(j+1,k) = s(j) * H(j,k) - c(j) * H(j+1,k);
+%                 H(j+1,k) = - s(j) * H(j,k) + c(j) * H(j+1,k);
                 H(j,k) = Hjk;
             end
 
-            % Compute and apply current Givens reflections:
+            % Compute and apply current Givens rotation:
             % [ck  sk] [H(k,k)  ] = [*]
             % [sk -ck] [H(k+1,k)]   [0]
             [c(k), s(k), H(k,k)] = SymGivens(H(k,k), H(k+1,k));
             H(k+1,k) = 0;
             g(k+1) = s(k) * g(k);
+%             g(k+1) = -s(k) * g(k);
             g(k)   = c(k) * g(k);
+            if ~isreal(g(k+1))
+                g(k+1) = real(g(k+1));
+            end
             residNorm = abs(g(k+1));
             residHistory = [residHistory; residNorm];
 

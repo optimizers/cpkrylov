@@ -146,11 +146,18 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
     u = b;                    % u_0 = b - A * x_0 = b
     t = zerom;                % t_0 =     C * q_0 = 0
 
+    if display_info
+        fprintf('\n**** Constraint-preconditioned version of DQGMRES - mem = %d ****\n\n', mem);
+    end
+
     % Set Lanczos vectors v1 and q1, and initial residual norm.
     w = M * [u; t];           % M * [u0; -t0], t0 = 0
     V(:,1) = w(1:n,1);
     Q(:,1) = - w(n+1:n+m,1);
     residNorm = sqrt(dot(u, V(:,1))); % residnorm = sqrt(dot(u0, v1) + dot(t0, q1));
+    if ~isreal(residNorm)
+                H(k,1) = sqrt(real( dot(u, V(:,1)) ));
+    end
     if residNorm ~= 0
         V(:,1) = V(:,1) / residNorm;
         Q(:,1) = Q(:,1) / residNorm;
@@ -164,9 +171,9 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 
     % Print initial iteration and residual norm (if required).
     if display_info
-        fprintf('\n**** Constraint-preconditioned version of DQGMRES - mem = %d ****\n\n', mem);
         header_fmt = '%5s  %9s\n';
-        info_fmt = '%5d  %9.2e\n';
+        % info_fmt = '%5d  %9.2e\n';
+        info_fmt = '%5d  %14.7e\n';
         fprintf('stopTol = %e\n',stopTol);
         fprintf(header_fmt, 'iter', '|resid|');
         fprintf(info_fmt, k, residNorm);
@@ -209,7 +216,9 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         end
         % kk = k-(k+1)+2 = 1
         H(k,1) = sqrt(dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)));
-
+        if ~isreal(H(k,1))
+                H(k,1) = sqrt(real( dot(u, V(:,kp1pos)) + dot(t, Q(:,kp1pos)) ));
+        end
         if H(k,1) ~= 0     % Lucky breakdown if = 0.
             V(:,kp1pos) = V(:,kp1pos) / H(k,1);
             Q(:,kp1pos) = Q(:,kp1pos) / H(k,1);
@@ -217,8 +226,6 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
 
         % Apply previous (symmetric) Givens rotations.
         for j = max(1,k-mem) : k-1
-            jpos = mod(j-1, mem+1) + 1;
-            jp1pos = mod(j, mem+1) + 1;
             jrotpos = mod(j-1, mem) + 1;
             kk  = k-j+1;       % kk  = 2+k-(j+1)
             kk1 = kk+1;        % kk1 = 2+k-j
@@ -237,6 +244,10 @@ function [x, y, stats, flag] = cpdqgmres(b, A, C, M, opts)
         H(k,1) = 0;
         g(kp1pos) = s(rotpos) * g(kpos);
         g(kpos)   = c(rotpos) * g(kpos);
+        if ~isreal(g(kp1pos))
+%                 fprintf('\ng(%d) = %g + %gi\n\n',kp1pos,real(g(kp1pos)),imag(g(kp1pos)));
+                g(kp1pos) = real(g(kp1pos));
+        end
 
         % Update directions PV and PQ, and solution [x; y].
         PV(:,kpos) = V(:,kpos);
