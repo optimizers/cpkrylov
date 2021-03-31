@@ -24,7 +24,7 @@ Details on the solvers and the related constraint preconditioners are provided i
 
 Daniela di Serafino and Dominique Orban,
 *Constraint-Preconditioned Krylov Solvers for Regularized Saddle-Point Systems*,
-SIAM Journal on Scientific Computing, 43 (2), 2021, pp. A1001-A1026.
+SIAM Journal on Scientific Computing, 43 (2), 2021, pp. A1001-A1026.    
 Preprint available as Cahier du GERAD G-2019-72, GERAD, Montréal, QC, Canada (revised in
 July 2020), and from http://www.optimization-online.org/DB_HTML/2019/10/7411.html
 and https://arxiv.org/abs/1910.02552.
